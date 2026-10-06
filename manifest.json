@@ -1,0 +1,25 @@
+{
+  "name": "Le QG des Daronnes",
+  "short_name": "QGD",
+  "description": "Planning et coordination des soirées entre daronnes",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f6f4",
+  "theme_color": "#ff9142",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "logo-qgd.png?v=3",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "logo-qgd.png?v=3",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

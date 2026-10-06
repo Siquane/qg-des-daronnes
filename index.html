@@ -1,0 +1,3130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le QG des Daronnes</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff9142">
+    <link rel="apple-touch-icon" href="logo-qgd.png?v=3">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f7f6f4;
+            --card-bg: #ffffff;
+            --avatar-card-bg: #ffffff;
+            --text: #080808;
+            --primary: #ff9142;
+            --primary-transparent: rgba(255, 145, 66, 0.82);
+            --border: #dfe4ea;
+            --shadow: rgba(0,0,0,0.05);
+        }
+        [data-theme="dark"] {
+            --bg: #1e1e24;
+            --card-bg: #2d2d38;
+            --avatar-card-bg: #1e1e24;
+            --text: #f1f2f6;
+            --primary: #ff9142;
+            --primary-transparent: rgba(255, 145, 66, 0.82);
+            --border: #3f3f4e;
+            --shadow: rgba(0,0,0,0.3);
+        }
+
+        * , *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 12px;
+            padding-bottom: 84px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Écran de Connexion */
+        #login-screen {
+            width: min(350px, 100%);
+            margin: 40px auto;
+            text-align: center;
+            background: var(--card-bg);
+            padding: 20px 16px;
+            border-radius: 16px;
+            box-shadow: 0 8px 16px var(--shadow);
+        }
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .avatar-card {
+            background: var(--avatar-card-bg);
+            border: 2px solid var(--border);
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .avatar-card:hover {
+            background: var(--avatar-card-bg);
+            color: var(--text);
+            border-color: var(--avatar-color, var(--primary));
+            transform: translateY(-2px);
+        }
+        .avatar-card:hover .avatar-icon {
+            animation: avatar-bob 0.6s ease-in-out infinite;
+        }
+
+        /* Icône avatar animée (visage qui cligne des yeux + flotte) */
+        .avatar-icon {
+            width: 48px;
+            height: 48px;
+            animation: avatar-float 3s ease-in-out infinite;
+        }
+        .avatar-icon .eye {
+            animation: avatar-blink 4s ease-in-out infinite;
+            transform-origin: center;
+            transform-box: fill-box;
+        }
+        @keyframes avatar-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        @keyframes avatar-bob {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-3px) rotate(-3deg); }
+        }
+        @keyframes avatar-blink {
+            0%, 88%, 100% { transform: scaleY(1); }
+            92% { transform: scaleY(0.1); }
+        }
+
+        /* Icône soleil/lune animée pour le bouton thème */
+        .theme-icon {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .theme-icon svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transition: opacity 0.4s ease, transform 0.5s ease;
+        }
+        .icon-sun {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+            animation: sun-pulse 3s ease-in-out infinite;
+        }
+        .icon-moon {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.6);
+        }
+        [data-theme="dark"] .icon-sun {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.6);
+            animation: none;
+        }
+        [data-theme="dark"] .icon-moon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+            animation: moon-twinkle 2.5s ease-in-out infinite;
+        }
+        @keyframes sun-pulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.25); }
+        }
+        @keyframes moon-twinkle {
+            0%, 100% { filter: drop-shadow(0 0 0px currentColor); }
+            50% { filter: drop-shadow(0 0 3px currentColor); }
+        }
+        #theme-toggle-btn.spin .theme-icon {
+            animation: spin-once 0.5s ease;
+        }
+        @keyframes spin-once {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Application principale */
+        #app-screen {
+            display: none;
+            width: min(350px, 100%);
+            margin: 0 auto;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            padding: 8px 0;
+            z-index: 5;
+        }
+        .top-bar-title {
+            font-weight: bold;
+            font-size: 1.25rem;
+            color: var(--primary);
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin: 0;
+        }
+        .top-bar-title-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .top-bar button {
+            flex-shrink: 0;
+        }
+        .top-bar button {
+            background: transparent;
+            border: none;
+            font-size: 1.3rem;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .top-bar button:hover {
+            background: transparent;
+            color: var(--primary);
+        }
+
+        /* Menu latéral */
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 20;
+        }
+        .menu-overlay.open { display: block; }
+        .menu-drawer {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            width: min(350px, 100%);
+            max-height: 85vh;
+            overflow-y: auto;
+            background: var(--card-bg);
+            box-shadow: 0 10px 24px var(--shadow);
+            transform: translate(-50%, -100%);
+            transition: transform 0.3s ease;
+            z-index: 21;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 0 0 16px 16px;
+        }
+        .menu-drawer.open { transform: translate(-50%, 0); }
+        .menu-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .menu-header .avatar-icon { width: 36px; height: 36px; margin: 0; }
+        .menu-header span { font-weight: bold; }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            text-align: center;
+            background: none;
+            border: none;
+            padding: 12px 4px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text);
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .menu-item:hover {
+            background: var(--bg);
+            color: var(--primary);
+            border-radius: 8px;
+        }
+        .menu-item svg { flex-shrink: 0; }
+
+        /* Barre de navigation du bas */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(350px, 100%);
+            display: flex;
+            justify-content: space-around;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+            z-index: 10;
+        }
+        .bottom-nav button {
+            flex: 1;
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 0.65rem;
+            color: var(--text);
+            opacity: 0.55;
+            padding: 4px 10px;
+        }
+        .bottom-nav button:hover {
+            background: none;
+            color: var(--text);
+        }
+        .bottom-nav button .nav-icon { font-size: 1.3rem; }
+        .bottom-nav button svg.nav-icon {
+            width: 22px;
+            height: 22px;
+            display: block;
+            margin: 0 auto 2px;
+        }
+        .bottom-nav button.active-nav {
+            opacity: 1;
+            color: var(--primary);
+        }
+        button {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+        }
+        button:hover {
+            background: var(--primary);
+            color: #080808;
+            border-color: var(--primary);
+        }
+        button.active-view {
+            background: var(--primary);
+            color: #080808;
+            border-color: var(--primary);
+        }
+
+        /* espace réservé aux vues */
+
+        /* Cartes de soirées */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 6px var(--shadow);
+            border: 1px solid var(--border);
+            transition: box-shadow 0.3s, border-color 0.3s;
+        }
+        .card.highlight-flash {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary);
+        }
+        .date-header {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .status-global {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .status-blocked { background: #ffd9d9; color: #a32d2d; }
+        .status-pending { background: var(--border); color: var(--text); opacity: 0.8; }
+        .status-free-kids { background: #d6ecff; color: #185fa5; }
+        .status-free { background: #d7f5e3; color: #0f6e56; }
+
+        /* Boutons ronds des participantes */
+        .participants-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            gap: 14px;
+        }
+        .slot-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 4px;
+        }
+        .participant-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem;
+        }
+        .round-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-top: 4px;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .round-btn:active {
+            transform: scale(0.9);
+        }
+        .round-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .round-btn.saving {
+            opacity: 0.5;
+        }
+        /* Pastilles d'état : la couleur = la personne (fixe, celle de son avatar),
+           la FORME/le remplissage = son statut de dispo.
+           - Pas répondu : rond gris
+           - Dispo : rond coloré (couleur de la personne)
+           - Dispo - enfants : triangle coloré (couleur de la personne)
+           - Indispo : rond avec une croix de la couleur de la personne */
+        .round-btn.state-inconnu { background: var(--border); border-radius: 50%; }
+        .round-btn.state-dispo { background: var(--pastille-color, var(--border)); border-radius: 50%; }
+        .round-btn.state-enfants { background: transparent; border-radius: 50%; }
+        .round-btn.state-indispo { background: transparent; border-radius: 50%; }
+        .pastille-cross { display: block; }
+
+        /* Pastilles de PARTICIPATION à une soirée/journée proposée (distinctes
+           des pastilles de dispo générale : rond avec un ✓, une ✕ ou un "?") */
+        .round-btn.part-inconnu { background: var(--border); border-radius: 50%; }
+        .round-btn.part-oui { background: var(--pastille-color, var(--border)); border-radius: 50%; }
+        .round-btn.part-non { background: transparent; border-radius: 50%; }
+        .participation-row { margin-top: 6px; }
+
+        /* Mini-pastilles utilisées dans la vue calendrier (taille réduite pour
+           que les 7 colonnes tiennent toujours sur la largeur de l'écran :
+           seul le défilement vertical est nécessaire, jamais horizontal) */
+        .mini-pastille-row {
+            display: flex;
+            gap: 1px;
+            justify-content: center;
+        }
+        .mini-pastille {
+            width: 6px;
+            height: 6px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mini-pastille.state-inconnu { background: var(--border); border-radius: 50%; }
+        .mini-pastille.state-dispo { background: var(--pastille-color, var(--border)); border-radius: 50%; }
+        .mini-pastille.state-enfants { background: transparent; border-radius: 50%; overflow: visible; }
+        .mini-pastille.state-indispo { background: transparent; border-radius: 50%; overflow: visible; }
+
+        /* Calendrier mensuel */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .calendar-nav span {
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+            overflow-x: hidden;
+        }
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: var(--primary);
+            padding-bottom: 4px;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+            position: relative;
+            cursor: default;
+        }
+        .calendar-day {
+            aspect-ratio: unset;
+            min-height: 58px;
+            padding: 3px 1px;
+            gap: 2px;
+            overflow: hidden;
+        }
+        .calendar-day.empty {
+            border: none;
+            min-height: 58px;
+        }
+        .calendar-day.has-event {
+            cursor: pointer;
+            border-color: var(--border);
+            font-weight: bold;
+        }
+        .calendar-day.has-event:hover {
+            border-color: var(--primary);
+        }
+        .calendar-day.selected-day {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+        .calendar-day .day-number-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+        .calendar-day .holiday-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--primary);
+            flex-shrink: 0;
+        }
+        #calendar-day-detail {
+            margin-top: 16px;
+        }
+        .calendar-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.68rem;
+            opacity: 0.75;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .calendar-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .calendar-legend .holiday-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: var(--primary);
+        }
+        .calendar-day.on-vacances {
+            background: rgba(255, 94, 58, 0.07);
+        }
+        [data-theme="dark"] .calendar-day.on-vacances {
+            background: rgba(255, 145, 66, 0.12);
+        }
+        .calendar-legend .vac-swatch {
+            width: 10px; height: 10px; border-radius: 3px; background: rgba(255, 94, 58, 0.2);
+        }
+
+        /* Page d'accueil */
+        .home-banner {
+            position: relative;
+            width: 350px;
+            height: 200px;
+            max-width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--primary), #ffb199);
+        }
+        .home-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .home-banner-scrim {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.2) 55%, rgba(0,0,0,0.05) 100%);
+            pointer-events: none;
+        }
+        .home-greeting {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 10px 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: #fff;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.7);
+            max-width: 95%;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .home-greeting .avatar-icon {
+            width: 44px;
+            height: 44px;
+            margin: 0;
+            animation: none;
+            flex-shrink: 0;
+        }
+        .overview-label {
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+        .overview-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 4px 0 12px;
+        }
+        .overview-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+        .overview-row:last-child { border-bottom: none; }
+        .overview-row .day-name { font-weight: bold; }
+        .overview-row .day-people { font-size: 0.85rem; opacity: 0.75; margin-top: 2px; }
+        .overview-row .chevron { opacity: 0.35; font-size: 1.1rem; }
+        .next-available-card {
+            text-align: center;
+            padding: 18px;
+        }
+        .next-available-card .label {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 0.7rem;
+        }
+        .next-available-card .value {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .whatsapp-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+            color: var(--text);
+            font-weight: bold;
+            text-decoration: none;
+            padding: 10px 16px;
+        }
+
+        .btn-orange {
+            background: var(--primary);
+            color: #080808;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+        .btn-orange:hover {
+            background: var(--primary);
+            opacity: 0.9;
+        }
+
+        /* Interface de chargement */
+        .loading-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 70px 20px;
+        }
+        .pour-anim {
+            width: 225px;
+            height: 137px;
+            transform: translateX(-16px);
+        }
+        .pour-anim .bottle-group {
+            transform-origin: 125px 195px;
+            animation: bottle-tilt 6.5s ease-in-out infinite;
+        }
+        @keyframes bottle-tilt {
+            0%, 100% { transform: rotate(34deg); }
+            50% { transform: rotate(39deg); }
+        }
+        .pour-anim .droplet {
+            opacity: 0;
+            animation: droplet-fall 6.5s ease-in-out infinite;
+        }
+        .pour-anim .droplet:nth-child(2) { animation-delay: 0.3s; }
+        .pour-anim .droplet:nth-child(3) { animation-delay: 0.6s; }
+        .pour-anim .droplet:nth-child(4) { animation-delay: 0.9s; }
+        .pour-anim .droplet:nth-child(5) { animation-delay: 1.2s; }
+        .pour-anim .droplet:nth-child(6) { animation-delay: 1.5s; }
+        .pour-anim .droplet:nth-child(7) { animation-delay: 1.8s; }
+        .pour-anim .droplet:nth-child(8) { animation-delay: 2.1s; }
+        .pour-anim .droplet:nth-child(9) { animation-delay: 2.4s; }
+        @keyframes droplet-fall {
+            0% { opacity: 0; transform: translate(0, 0); }
+            2.46% { opacity: 1; }
+            19.69% { opacity: 1; transform: translate(10px, 45px); }
+            24.6% { opacity: 0; transform: translate(11px, 47px); }
+            100% { opacity: 0; transform: translate(11px, 47px); }
+        }
+        .pour-anim .liquid-fill {
+            animation: liquid-rise 6.5s cubic-bezier(.45,0,.2,1) infinite;
+        }
+        @keyframes liquid-rise {
+            0% { height: 0; y: 182px; opacity: 0; }
+            0.5% { opacity: 1; }
+            61.538% { height: 26px; y: 156px; opacity: 1; }
+            92.308% { height: 26px; y: 156px; opacity: 1; }
+            100% { height: 26px; y: 156px; opacity: 0; }
+        }
+        .loading-text {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            color: var(--text);
+            opacity: 0.85;
+            text-align: center;
+        }
+
+        /* Pop-up de saisie du code PIN */
+        .pin-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 30;
+        }
+        .pin-overlay.open { display: block; }
+        .pin-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(280px, 85vw);
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 28px 24px;
+            box-shadow: 0 16px 32px var(--shadow);
+            z-index: 31;
+            text-align: center;
+        }
+        .pin-modal.open { display: block; }
+        .pin-avatar-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .pin-avatar-wrap .avatar-icon {
+            width: 56px;
+            height: 56px;
+            animation: none;
+        }
+        .pin-title {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 18px;
+        }
+        .pin-input {
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 1.6rem;
+            letter-spacing: 0.5em;
+            padding: 10px 0 10px 0.5em;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .pin-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .pin-error {
+            color: #e24b4a;
+            font-size: 0.8rem;
+            font-weight: 600;
+            min-height: 1.2em;
+            margin-bottom: 8px;
+        }
+        .pin-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        .pin-actions button {
+            flex: 1;
+        }
+        .pin-actions .btn-orange {
+            margin-top: 0;
+        }
+
+        /* Pop-up de confirmation de soirée (motif) */
+        .confirm-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 30;
+        }
+        .confirm-overlay.open { display: block; }
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(300px, 85vw);
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 16px 32px var(--shadow);
+            z-index: 31;
+            text-align: center;
+        }
+        .confirm-modal.open { display: block; }
+        .confirm-modal .confirm-title {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 14px;
+        }
+        .confirm-modal input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+        .confirm-modal input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .confirm-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .confirm-actions button {
+            flex: 1;
+        }
+        .confirm-actions .btn-orange {
+            margin-top: 0;
+        }
+
+        /* Pop-up FAQ */
+        .faq-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(340px, 90vw);
+            max-height: 80vh;
+            overflow-y: auto;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 16px 32px var(--shadow);
+            z-index: 31;
+            text-align: left;
+        }
+        .faq-modal.open { display: block; }
+        .faq-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            padding-bottom: 6px;
+        }
+        .faq-title-row h2 {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin: 0;
+        }
+        .faq-section {
+            margin-bottom: 14px;
+        }
+        .faq-section h3 {
+            font-size: 0.85rem;
+            margin: 0 0 4px;
+            color: var(--primary);
+        }
+        .faq-section p {
+            font-size: 0.8rem;
+            line-height: 1.5;
+            margin: 0;
+            opacity: 0.9;
+        }
+        .faq-section .faq-body {
+            font-size: 0.8rem;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+        .faq-section ul {
+            margin: 4px 0 0;
+            padding-left: 18px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        /* Barre de soirée/journée proposée (grise) ou confirmée (segments colorés) */
+        .proposal-bar-wrap {
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 12px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+        }
+        .proposal-bar-segments {
+            display: flex;
+            height: 7px;
+            width: 100%;
+        }
+        .proposal-bar-body {
+            background: var(--card-bg);
+            padding: 8px 12px;
+            font-size: 0.83rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .proposal-bar-wrap.is-grey .proposal-bar-body {
+            background: var(--bg);
+            color: var(--text);
+            opacity: 0.9;
+        }
+        .proposal-bar-wrap.is-confirmed .proposal-bar-body {
+            background: #e6f1fb;
+            color: #0c447c;
+        }
+        [data-theme="dark"] .proposal-bar-wrap.is-confirmed .proposal-bar-body {
+            background: #1c3550;
+            color: #bcdcfa;
+        }
+        .proposal-bar-body button {
+            background: none;
+            border: none;
+            font-size: 0.72rem;
+            padding: 2px 6px;
+            font-weight: bold;
+            text-decoration: underline;
+            color: inherit;
+        }
+        .proposal-bar-body button:hover {
+            background: none;
+            color: inherit;
+            opacity: 0.7;
+        }
+        .proposal-bar-warning {
+            font-weight: 600;
+            font-size: 0.78rem;
+        }
+
+        /* Badges "proposée" / "confirmée" à côté de la date */
+        .extra-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .badge-proposed, .badge-confirmed {
+            font-size: 0.68rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .badge-proposed { background: var(--border); color: var(--text); opacity: 0.85; }
+        .badge-confirmed { background: #e6f1fb; color: #0c447c; }
+        [data-theme="dark"] .badge-confirmed { background: #1c3550; color: #bcdcfa; }
+
+        /* Lien SMS */
+        .sms-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: var(--text);
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+        .sms-link-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .confirm-btn-wrap {
+            text-align: center;
+            margin-top: 12px;
+        }
+        .btn-subtle {
+            background: transparent;
+            color: var(--text);
+            opacity: 0.6;
+            border: 1px dashed var(--border);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 6px 12px;
+        }
+        .btn-subtle:hover {
+            background: transparent;
+            color: var(--text);
+            border-color: var(--border);
+            opacity: 0.85;
+        }
+
+        /* Titres : Fraunces (chaleureux + sérieux), reste en Inter */
+        #login-screen h1,
+        .top-bar-title,
+        .home-greeting span,
+        .overview-title,
+        .calendar-nav span {
+            font-family: 'Fraunces', serif;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Bouton remonter en haut */
+        .scroll-top-btn {
+            position: fixed;
+            right: 16px;
+            bottom: 84px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--primary-transparent);
+            color: #080808;
+            border: 2px solid #3a3a3a;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px var(--shadow);
+            z-index: 15;
+            padding: 0;
+            font-size: 1.1rem;
+        }
+        .scroll-top-btn:hover {
+            background: var(--primary-transparent);
+            opacity: 0.9;
+        }
+
+        .overview-row:focus-visible,
+        .calendar-day.has-event:focus-visible,
+        .avatar-card:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Notifications toast (remplacent les alert() du navigateur) */
+        .toast-container {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(300px, 90vw);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 40;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            padding: 10px 14px;
+            box-shadow: 0 6px 16px var(--shadow);
+            font-size: 0.85rem;
+            color: var(--text);
+            animation: toast-in 0.25s ease;
+            transition: opacity 0.3s ease;
+        }
+        .toast.toast-error { border-left-color: #e24b4a; }
+        .toast.toast-warn { border-left-color: #eccc68; }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <div id="login-screen">
+        <h1 style="font-size: 1.5rem; white-space: nowrap;">Le QG des Daronnes</h1>
+        <p style="margin: 16px 0 24px; line-height: 1.6;">Qui se connecte aujourd'hui ?</p>
+        <div class="avatar-grid" id="avatar-grid"></div>
+    </div>
+
+    <!-- Pop-up de saisie du code PIN -->
+    <div id="pin-overlay" class="pin-overlay" onclick="closePinModal()"></div>
+    <div id="pin-modal" class="pin-modal" role="dialog" aria-modal="true" aria-labelledby="pin-title">
+        <div class="pin-avatar-wrap">
+            <svg id="pin-avatar-icon" class="avatar-icon" viewBox="0 0 48 48" aria-hidden="true"></svg>
+        </div>
+        <div class="pin-title" id="pin-title">Code PIN</div>
+        <label for="pin-input" class="sr-only">Code PIN</label>
+        <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="pin-input" class="pin-input" autocomplete="off" aria-describedby="pin-error" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitPin();}">
+        <div class="pin-error" id="pin-error" role="alert"></div>
+        <div class="pin-actions">
+            <button onclick="closePinModal()">Annuler</button>
+            <button class="btn-orange" onclick="submitPin()">Valider</button>
+        </div>
+    </div>
+
+    <!-- Pop-up de confirmation d'une soirée (motif) -->
+    <div id="confirm-overlay" class="confirm-overlay" onclick="closeConfirmModal()"></div>
+    <div id="confirm-modal" class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="confirm-title" id="confirm-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:-4px; margin-right:4px;" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/></svg>
+            <span id="confirm-title-text">Proposer cette soirée</span>
+        </div>
+        <label for="confirm-input" class="sr-only">Motif</label>
+        <input type="text" id="confirm-input" placeholder="Ex : anniversaire, juste pour se voir..." maxlength="60" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitConfirm();}">
+        <div class="confirm-actions">
+            <button onclick="closeConfirmModal()">Annuler</button>
+            <button class="btn-orange" onclick="submitConfirm()">Proposer</button>
+        </div>
+    </div>
+
+    <!-- Pop-up "Ajouter à mon agenda perso" (titre + notes personnalisables) -->
+    <div id="ics-overlay" class="confirm-overlay" onclick="closeIcsModal()"></div>
+    <div id="ics-modal" class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="ics-title">
+        <div class="confirm-title" id="ics-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:-4px; margin-right:4px;" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+            <span>Ajouter à mon agenda</span>
+        </div>
+        <label for="ics-title-input" class="sr-only">Titre de l'événement</label>
+        <input type="text" id="ics-title-input" placeholder="Titre de l'événement" maxlength="100" autocomplete="off">
+        <label for="ics-notes-input" class="sr-only">Notes</label>
+        <input type="text" id="ics-notes-input" placeholder="Notes (optionnel)" maxlength="200" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitIcsDownload();}">
+        <div class="confirm-actions">
+            <button onclick="closeIcsModal()">Annuler</button>
+            <button class="btn-orange" onclick="submitIcsDownload()">Télécharger</button>
+        </div>
+    </div>
+
+    <div id="app-screen">
+        <div class="top-bar">
+            <button onclick="toggleMenu()" id="menu-toggle-btn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="menu-drawer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" width="24" height="24" aria-hidden="true">
+                    <line x1="4" y1="7" x2="20" y2="7"/>
+                    <line x1="4" y1="12" x2="20" y2="12"/>
+                    <line x1="4" y1="17" x2="20" y2="17"/>
+                </svg>
+            </button>
+            <h1 class="top-bar-title">
+                <span class="top-bar-title-text">Le QG des Daronnes</span>
+            </h1>
+            <button id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Passer en mode sombre">
+                <span class="theme-icon">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4"/>
+                        <line x1="12" y1="2" x2="12" y2="4"/>
+                        <line x1="12" y1="20" x2="12" y2="22"/>
+                        <line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/>
+                        <line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/>
+                        <line x1="2" y1="12" x2="4" y2="12"/>
+                        <line x1="20" y1="12" x2="22" y2="12"/>
+                        <line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/>
+                        <line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/>
+                    </svg>
+                </span>
+            </button>
+        </div>
+
+        <div id="content-container"></div>
+    </div>
+
+    <!-- Menu latéral -->
+    <div id="menu-overlay" class="menu-overlay" onclick="closeMenu()"></div>
+    <div id="menu-drawer" class="menu-drawer" role="dialog" aria-modal="true" aria-labelledby="menu-user-name">
+        <div class="menu-header">
+            <svg id="menu-avatar-icon" class="avatar-icon" viewBox="0 0 48 48" aria-hidden="true"></svg>
+            <span id="menu-user-name">Connectée : —</span>
+        </div>
+        <button class="menu-item" id="menu-refresh-btn" onclick="manualRefresh()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66"/>
+                <path d="M20 4v5h-5"/>
+            </svg>
+            <span aria-live="polite">Actualiser le planning</span>
+        </button>
+        <a class="menu-item" id="menu-whatsapp-link" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+            <span>Groupe WhatsApp</span>
+        </a>
+        <button class="menu-item" onclick="openFaqModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M9.5 9a2.5 2.5 0 0 1 4.9 0.7c0 1.7-2.4 1.9-2.4 3.6"/>
+                <line x1="12" y1="16.6" x2="12" y2="16.7"/>
+            </svg>
+            <span>FAQ / Comment ça marche</span>
+        </button>
+        <button class="menu-item" onclick="logout()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Changer de profil</span>
+        </button>
+    </div>
+
+    <!-- Pop-up FAQ / Comment ça marche -->
+    <div id="faq-overlay" class="confirm-overlay" onclick="closeFaqModal()"></div>
+    <div id="faq-modal" class="faq-modal" role="dialog" aria-modal="true" aria-labelledby="faq-title">
+        <div class="faq-title-row">
+            <h2 id="faq-title">❓ Comment ça marche</h2>
+            <button onclick="closeFaqModal()" aria-label="Fermer la FAQ" style="background:none; border:none; padding:4px; font-size:1.2rem; line-height:1;">✕</button>
+        </div>
+        <div id="faq-content"></div>
+        <div class="confirm-actions" style="margin-top:14px;">
+            <button class="btn-orange" onclick="closeFaqModal()" style="flex:1;">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Notifications toast -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- Bouton remonter en haut -->
+    <button id="scroll-top-btn" class="scroll-top-btn" onclick="scrollToTop()" title="Remonter en haut" aria-label="Remonter en haut">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+            <line x1="12" y1="19" x2="12" y2="5"/>
+            <polyline points="5 12 12 5 19 12"/>
+        </svg>
+    </button>
+
+    <!-- Barre de navigation du bas -->
+    <nav class="bottom-nav" id="bottom-nav" style="display:none;">
+        <button id="nav-accueil" onclick="switchTab('accueil')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 11.5 12 4l8 7.5"/>
+                <path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/>
+            </svg>
+            <span>Accueil</span>
+        </button>
+        <button id="nav-liste" onclick="switchTab('liste')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="5" cy="6" r="1.2" fill="currentColor" stroke="none"/>
+                <line x1="9" y1="6" x2="20" y2="6"/>
+                <circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+                <line x1="9" y1="12" x2="20" y2="12"/>
+                <circle cx="5" cy="18" r="1.2" fill="currentColor" stroke="none"/>
+                <line x1="9" y1="18" x2="20" y2="18"/>
+            </svg>
+            <span>Saisie</span>
+        </button>
+        <button id="nav-idee" onclick="switchTab('idee')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="4"/>
+                <circle cx="8.5" cy="8.5" r="1.1" fill="currentColor" stroke="none"/>
+                <circle cx="15.5" cy="8.5" r="1.1" fill="currentColor" stroke="none"/>
+                <circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/>
+                <circle cx="8.5" cy="15.5" r="1.1" fill="currentColor" stroke="none"/>
+                <circle cx="15.5" cy="15.5" r="1.1" fill="currentColor" stroke="none"/>
+            </svg>
+            <span>Idée</span>
+        </button>
+    </nav>
+
+    <script>
+        // ==========================================================
+        // CONFIGURATION
+        // ==========================================================
+
+        // URL de lecture (export CSV public du Google Sheet)
+        // (Ancienne lecture via CSV publié, remplacée par la lecture live via
+        // Apps Script — voir loadPlanning() plus bas. Conservé en commentaire
+        // au cas où : "https://docs.google.com/spreadsheets/d/e/.../pub?output=csv")
+
+        // ⚠️ A REMPLACER : URL du déploiement Apps Script (se termine par /exec)
+        // Déploie Code.gs en Application Web puis colle l'URL ici.
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxo9A_3guPcgwsDo0V_zbReyfQtrZoEF5QI40ETHSmURFaP9bIYHb3HlaLbrfwGpkrc/exec";
+
+        // 🖼️ Bannière de la page d'accueil : mets ici le chemin/URL de la photo
+        // (ex: "images/banniere.jpg" si tu ajoutes le fichier dans ton repo GitHub).
+        // Laisse vide "" pour un dégradé de couleur à la place.
+        const HOME_BANNER_URL = "https://picsum.photos/350/200";
+
+        // 💬 Lien vers le groupe WhatsApp (menu + page d'accueil)
+        const WHATSAPP_URL = "https://chat.whatsapp.com/Gb2c0ayE9v9DhASPU4MQsb";
+
+        // 🔗 A REMPLACER : URL publique de l'appli (ex: ton lien Netlify), utilisée
+        // dans le SMS envoyé quand une soirée est proposée.
+        const APP_URL = "https://qg-des-daronnes.netlify.app";
+        // (protection simple entre vous, pas une vraie sécurité)
+        const PEOPLE = [
+            { display: "Anaïs",        short: "Anaïs",    key: "anais",       column: "Anais",       columnJournee: "Anais_Journee",       columnParticipe: "Anais_Participe",       columnParticipeJournee: "Anais_ParticipeJournee",       pin: "1111", color: "#26de81" },
+            { display: "Anne-Sophie",  short: "Anne-So",  key: "anneSophie",  column: "AnneSophie",  columnJournee: "AnneSophie_Journee",  columnParticipe: "AnneSophie_Participe",  columnParticipeJournee: "AnneSophie_ParticipeJournee",  pin: "2222", color: "#b376ed" },
+            { display: "Céline",       short: "Céline",   key: "celine",      column: "Celine",      columnJournee: "Celine_Journee",      columnParticipe: "Celine_Participe",      columnParticipeJournee: "Celine_ParticipeJournee",      pin: "3333", color: "#ff6b81" },
+            { display: "Sonia",        short: "Sonia",    key: "sonia",       column: "Sonia",       columnJournee: "Sonia_Journee",       columnParticipe: "Sonia_Participe",       columnParticipeJournee: "Sonia_ParticipeJournee",       pin: "4444", color: "#feca57" }
+        ];
+
+        // 🇫🇷 Jours fériés France (codés en dur, 2026-2028).
+        // ⚠️ A METTRE A JOUR EN AOUT 2027 (ajouter 2029 et vérifier les dates
+        // à Pâques variable de 2027/2028 avant leur passage).
+        const JOURS_FERIES = [
+            "2026-01-01","2026-04-06","2026-05-01","2026-05-08","2026-05-14","2026-05-25","2026-07-14","2026-08-15","2026-11-01","2026-11-11","2026-12-25",
+            "2027-01-01","2027-03-29","2027-05-01","2027-05-06","2027-05-08","2027-05-17","2027-07-14","2027-08-15","2027-11-01","2027-11-11","2027-12-25",
+            "2028-01-01","2028-04-17","2028-05-01","2028-05-08","2028-05-25","2028-06-05","2028-07-14","2028-08-15","2028-11-01","2028-11-11","2028-12-25"
+        ];
+
+        // 🏖️ Vacances scolaires Zone A (Besançon en fait partie), codées en dur.
+        // Chaque entrée est une plage [début, fin] inclusive au format ISO.
+        // ⚠️ A METTRE A JOUR EN AOUT 2027 (source : education.gouv.fr, zone A).
+        const VACANCES_ZONE_A = [
+            { start: "2026-02-14", end: "2026-03-02" }, // Hiver
+            { start: "2026-04-11", end: "2026-04-27" }, // Printemps
+            { start: "2026-07-04", end: "2026-09-01" }, // Été
+            { start: "2026-10-17", end: "2026-11-02" }, // Toussaint
+            { start: "2026-12-19", end: "2027-01-04" }, // Noël
+            { start: "2027-02-13", end: "2027-03-01" }, // Hiver
+            { start: "2027-04-10", end: "2027-04-26" }, // Printemps
+            { start: "2027-07-03", end: "2027-08-31" }, // Été
+            { start: "2027-10-16", end: "2027-11-01" }, // Toussaint
+            { start: "2027-12-18", end: "2028-01-03" }, // Noël
+            { start: "2028-02-12", end: "2028-02-28" }, // Hiver
+            { start: "2028-04-08", end: "2028-04-24" }, // Printemps
+            { start: "2028-07-08", end: "2028-09-04" }  // Été (jusqu'à fin déc 2028 non couvert au-delà)
+        ];
+
+        function isoDateStr_(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        }
+
+        function isJourFerie(d) {
+            if (!d) return false;
+            return JOURS_FERIES.includes(isoDateStr_(d));
+        }
+
+        function isVacancesZoneA(d) {
+            if (!d) return false;
+            const iso = isoDateStr_(d);
+            return VACANCES_ZONE_A.some(r => iso >= r.start && iso <= r.end);
+        }
+
+        // ==========================================================
+        // ETAT
+        // ==========================================================
+        let currentUser = "";
+        let currentTab = "accueil"; // 'accueil' | 'liste' | 'idee'
+        let currentView = "list";   // sous-vue de l'onglet Liste : 'list' | 'calendar'
+        let planningData = [];
+        let calYear = new Date().getFullYear();
+        let calMonth = new Date().getMonth(); // 0-11
+        let selectedCalendarKey = null; // date ISO du jour sélectionné dans la vue calendrier (reste affiché tant qu'on ne clique pas un autre jour)
+        let listSearchQuery = "";
+        let listVisibleCount = 20;
+        let pendingPinPerson = null;
+
+        // ==========================================================
+        // LOGIN / LOGOUT
+        // ==========================================================
+        function buildLoginScreen() {
+            const grid = document.getElementById("avatar-grid");
+            grid.innerHTML = "";
+            PEOPLE.forEach(p => {
+                const div = document.createElement("button");
+                div.type = "button";
+                div.className = "avatar-card";
+                div.setAttribute("aria-label", `Se connecter en tant que ${p.display}`);
+                div.style.setProperty("--avatar-color", p.color);
+                div.innerHTML = `
+                    <svg class="avatar-icon" viewBox="0 0 48 48" aria-hidden="true">${avatarSvgInner(p)}</svg>
+                    <span>${p.display}</span>
+                `;
+                div.onclick = () => attemptLogin(p);
+                grid.appendChild(div);
+
+                // Décalage aléatoire pour que les avatars ne bougent pas tous en même temps
+                const delay = (Math.random() * 2).toFixed(2) + "s";
+                div.querySelector(".avatar-icon").style.animationDelay = delay;
+                div.querySelectorAll(".eye").forEach(eye => eye.style.animationDelay = delay);
+            });
+        }
+
+        let pinTriggerEl = null;
+
+        function attemptLogin(person) {
+            pendingPinPerson = person;
+            pinTriggerEl = document.activeElement;
+            document.getElementById("pin-avatar-icon").innerHTML = avatarSvgInner(person);
+            document.getElementById("pin-input").value = "";
+            document.getElementById("pin-error").textContent = "";
+            document.getElementById("pin-overlay").classList.add("open");
+            document.getElementById("pin-modal").classList.add("open");
+            setTimeout(() => document.getElementById("pin-input").focus(), 50);
+        }
+
+        function closePinModal(returnFocus = true) {
+            document.getElementById("pin-overlay").classList.remove("open");
+            document.getElementById("pin-modal").classList.remove("open");
+            pendingPinPerson = null;
+            const elToFocus = pinTriggerEl;
+            pinTriggerEl = null;
+            if (returnFocus && elToFocus) {
+                // Décalé au tick suivant : évite que le relâchement de la touche
+                // Entrée (keyup), une fois le focus revenu sur ce bouton, ne soit
+                // interprété par le navigateur comme un nouveau clic dessus.
+                setTimeout(() => elToFocus.focus(), 0);
+            }
+        }
+
+        function submitPin() {
+            if (!pendingPinPerson) return;
+            const input = document.getElementById("pin-input");
+            if (input.value.trim() === pendingPinPerson.pin) {
+                const person = pendingPinPerson;
+                closePinModal(false);
+                login(person.display);
+            } else {
+                document.getElementById("pin-error").textContent = "Code incorrect, réessaie.";
+                input.value = "";
+                input.focus();
+            }
+        }
+
+        // ==========================================================
+        // SOIRÉE / JOURNÉE CONFIRMÉE
+        // ==========================================================
+        let pendingConfirmIndex = null;
+        let pendingConfirmSlot = "evening";
+        let confirmTriggerEl = null;
+
+        function openConfirmModal(index, slot = "evening") {
+            pendingConfirmIndex = index;
+            pendingConfirmSlot = slot;
+            confirmTriggerEl = document.activeElement;
+            document.getElementById("confirm-title-text").textContent = slot === "day" ? "Proposer cette journée" : "Proposer cette soirée";
+            document.getElementById("confirm-input").value = "";
+            document.getElementById("confirm-overlay").classList.add("open");
+            document.getElementById("confirm-modal").classList.add("open");
+            setTimeout(() => document.getElementById("confirm-input").focus(), 50);
+        }
+
+        function closeConfirmModal() {
+            document.getElementById("confirm-overlay").classList.remove("open");
+            document.getElementById("confirm-modal").classList.remove("open");
+            pendingConfirmIndex = null;
+            const elToFocus = confirmTriggerEl;
+            confirmTriggerEl = null;
+            if (elToFocus) setTimeout(() => elToFocus.focus(), 0);
+        }
+
+        async function submitConfirm() {
+            if (pendingConfirmIndex === null) return;
+            const motif = document.getElementById("confirm-input").value.trim();
+            if (!motif) {
+                showToast("Ajoute un petit motif.", "warn");
+                return;
+            }
+            const index = pendingConfirmIndex;
+            const slot = pendingConfirmSlot;
+            closeConfirmModal();
+            await sendConfirmSlot_(index, slot, motif);
+        }
+
+        async function unconfirmSoiree(index) {
+            await sendConfirmSlot_(index, "evening", "");
+        }
+
+        async function unconfirmJournee(index) {
+            await sendConfirmSlot_(index, "day", "");
+        }
+
+        async function sendConfirmSlot_(index, slot, motif) {
+            const item = planningData[index];
+            const field = slot === "day" ? "confirmeeJournee" : "confirmee";
+            item[field] = motif;
+            // Nouvelle proposition (ou annulation) : on repart de zéro sur les
+            // réponses "je viens / je viens pas", indépendamment des dispos.
+            resetParticipation_(item, slot);
+            renderApp();
+
+            try {
+                const baseAction = slot === "day" ? "Journee" : "Soiree";
+                const action = (motif ? "confirm" : "unconfirm") + baseAction;
+                const url = `${APPS_SCRIPT_URL}?action=${action}&row=${item.sheetRow}&motif=${encodeURIComponent(motif)}`;
+                const resp = await fetch(url);
+                const result = await resp.json();
+                if (!result.success) {
+                    showToast("Erreur : " + (result.error || "inconnue"), "error");
+                    await loadPlanning();
+                } else if (motif) {
+                    showToast(slot === "day" ? "Journée proposée !" : "Soirée proposée !");
+                }
+            } catch (err) {
+                showToast("Erreur réseau, réessaie plus tard.", "error");
+                await loadPlanning();
+            }
+        }
+
+        const SESSION_KEY = "qgd_session_user_v1";
+
+        function login(user) {
+            currentUser = user;
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("app-screen").style.display = "block";
+
+            try {
+                localStorage.setItem(SESSION_KEY, user);
+            } catch (e) {
+                // Stockage indisponible : la session ne persistera juste pas au rechargement.
+            }
+
+            // Remplit le menu latéral avec le nom + l'avatar de la personne connectée
+            const person = PEOPLE.find(p => p.display === user);
+            document.getElementById("menu-user-name").textContent = `Connectée : ${user}`;
+            document.getElementById("menu-avatar-icon").innerHTML = avatarSvgInner(person);
+
+            // Lien WhatsApp : on l'affiche seulement s'il est configuré
+            const waLink = document.getElementById("menu-whatsapp-link");
+            if (WHATSAPP_URL) {
+                waLink.href = WHATSAPP_URL;
+                waLink.style.display = "flex";
+            } else {
+                waLink.style.display = "none";
+            }
+
+            currentTab = "accueil";
+            document.getElementById("bottom-nav").style.display = "flex";
+            switchTab("accueil");
+            loadPlanning();
+        }
+
+        function logout() {
+            currentUser = "";
+            closeMenu();
+            try {
+                localStorage.removeItem(SESSION_KEY);
+            } catch (e) {
+                // Pas grave.
+            }
+            document.getElementById("bottom-nav").style.display = "none";
+            document.getElementById("app-screen").style.display = "none";
+            document.getElementById("login-screen").style.display = "block";
+        }
+
+        function toggleMenu() {
+            const overlay = document.getElementById("menu-overlay");
+            const drawer = document.getElementById("menu-drawer");
+            const btn = document.getElementById("menu-toggle-btn");
+            const opening = !drawer.classList.contains("open");
+            overlay.classList.toggle("open");
+            drawer.classList.toggle("open");
+            btn.setAttribute("aria-expanded", opening ? "true" : "false");
+            btn.setAttribute("aria-label", opening ? "Fermer le menu" : "Ouvrir le menu");
+            if (opening) {
+                const firstFocusable = drawer.querySelector("button, a[href]");
+                if (firstFocusable) firstFocusable.focus();
+            } else {
+                btn.focus();
+            }
+        }
+
+        function closeMenu() {
+            const wasOpen = document.getElementById("menu-drawer").classList.contains("open");
+            document.getElementById("menu-overlay").classList.remove("open");
+            document.getElementById("menu-drawer").classList.remove("open");
+            const btn = document.getElementById("menu-toggle-btn");
+            btn.setAttribute("aria-expanded", "false");
+            btn.setAttribute("aria-label", "Ouvrir le menu");
+            if (wasOpen) btn.focus();
+        }
+
+        // ==========================================================
+        // POP-UP FAQ / COMMENT ÇA MARCHE
+        // ==========================================================
+        let faqTriggerEl = null;
+
+        const FAQ_SECTIONS = [
+            {
+                title: "🔑 Se connecter",
+                html: "Choisis ton avatar sur l'écran d'accueil puis entre ton code PIN à 4 chiffres. L'appli se souvient de toi au prochain lancement (\"Changer de profil\" dans le menu pour te déconnecter)."
+            },
+            {
+                title: "🔵 Les pastilles : donner ta dispo",
+                html: `Sur chaque soirée/journée, 4 pastilles (une par personne) indiquent les dispos. La <strong>couleur</strong> est toujours celle de la personne, seule la <strong>forme</strong> change :
+                    <ul>
+                        <li><strong>Rond gris</strong> : pas encore répondu</li>
+                        <li><strong>Rond coloré</strong> : dispo</li>
+                        <li><strong>Triangle coloré</strong> : dispo avec les enfants</li>
+                        <li><strong>Croix colorée</strong> : indisponible</li>
+                    </ul>
+                    Tu ne peux modifier que ta propre pastille, en cliquant dessus (elle change d'état à chaque clic).`
+            },
+            {
+                title: "🍷 Proposer une soirée ou journée",
+                html: `Le bouton "Proposer cette soirée/journée" ouvre une pop-up où tu indiques un motif (ex : piscine, anniversaire). La proposition s'affiche alors en bandeau gris, sous les pastilles de dispo et sur l'accueil.`
+            },
+            {
+                title: "✅ Répondre à une proposition (\"Qui vient ?\")",
+                html: `Une fois une soirée proposée, une deuxième rangée de pastilles apparaît : <strong>"Qui vient à cette proposition ?"</strong>. C'est complètement séparé de tes dispos générales — être dispo ne veut pas dire vouloir faire l'activité proposée (une pastille dispo n'indique pas si tu as envie d'aller à la piscine !). Clique ta pastille pour répondre : rond gris = pas répondu, rond coloré = tu viens, croix colorée = tu ne viens pas.
+                    Dès que les <strong>4 ont répondu à la proposition</strong> et qu'au moins <strong>2 ont dit "je viens"</strong>, la soirée est <strong>confirmée automatiquement</strong> (le bandeau devient coloré, un segment par personne partante). Sinon, un message propose d'annuler la proposition. Plusieurs soirées peuvent être proposées en même temps.`
+            },
+            {
+                title: "📱 Prévenir par SMS",
+                html: "Quand une soirée est proposée, un lien SMS pré-rempli permet de prévenir le groupe (ou qui tu veux) avec la date, le motif et le lien de l'appli, pour que tout le monde vienne répondre."
+            },
+            {
+                title: "🏠 Onglet Accueil",
+                html: "Affiche toutes les soirées/journées proposées ou confirmées à venir (avec réponse rapide \"Qui vient ?\" et bouton agenda perso), un aperçu des dispos du week-end à venir, la prochaine date où tout le monde est libre, et de petites statistiques du mois."
+            },
+            {
+                title: "📝 Onglet Saisie",
+                html: `Deux vues au choix :
+                    <ul>
+                        <li><strong>Vue Liste</strong> : toutes les dates à venir sous forme de cartes, avec recherche.</li>
+                        <li><strong>Vue Calendrier</strong> : grille mensuelle avec 4 mini-pastilles par jour (2 lignes si Journée + Soirée). Un point orange signale un <strong>jour férié</strong>, un fond teinté signale les <strong>vacances scolaires zone A</strong>. Clique un jour pour voir/répondre au détail en dessous.</li>
+                    </ul>`
+            },
+            {
+                title: "🎲 Onglet Idée",
+                html: "Tire une idée de soirée au hasard, ajoute et gère tes propres idées, ou consulte les sorties près de chez vous."
+            },
+            {
+                title: "📅 Ajouter à mon agenda perso",
+                html: "Télécharge un fichier .ics pour ta propre soirée proposée/confirmée. Une pop-up te laisse d'abord personnaliser le titre et les notes avant le téléchargement."
+            },
+            {
+                title: "⚙️ Le menu (en haut à gauche)",
+                html: "Actualiser le planning manuellement, ouvrir le groupe WhatsApp, revoir cette FAQ, ou changer de profil. Le bouton soleil/lune (en haut à droite) bascule entre thème clair et sombre."
+            }
+        ];
+
+        function buildFaqContent_() {
+            return FAQ_SECTIONS.map(s => `
+                <div class="faq-section">
+                    <h3>${s.title}</h3>
+                    <div class="faq-body">${s.html}</div>
+                </div>
+            `).join("");
+        }
+
+        function openFaqModal() {
+            faqTriggerEl = document.activeElement;
+            closeMenu();
+            const content = document.getElementById("faq-content");
+            if (content && !content.dataset.built) {
+                content.innerHTML = buildFaqContent_();
+                content.dataset.built = "1";
+            }
+            document.getElementById("faq-overlay").classList.add("open");
+            document.getElementById("faq-modal").classList.add("open");
+        }
+
+        function closeFaqModal() {
+            document.getElementById("faq-overlay").classList.remove("open");
+            document.getElementById("faq-modal").classList.remove("open");
+            const elToFocus = faqTriggerEl;
+            faqTriggerEl = null;
+            if (elToFocus) setTimeout(() => elToFocus.focus(), 0);
+        }
+
+        // Retourne le contenu interne (sans la balise <svg>) d'un visage avatar,
+        // réutilisable pour le login, le menu et la page d'accueil.
+        function avatarSvgInner(p) {
+            if (!p) return "";
+            return `
+                <circle cx="24" cy="24" r="20" fill="none" stroke="var(--text)" stroke-width="1.8"/>
+                <path class="eye" d="M14 20 Q17.5 15.5 21 20" fill="none" stroke="var(--text)" stroke-width="1.35" stroke-linecap="round"/>
+                <path class="eye" d="M27 20 Q30.5 15.5 34 20" fill="none" stroke="var(--text)" stroke-width="1.35" stroke-linecap="round"/>
+                <circle cx="14.5" cy="28" r="4" fill="none" stroke="${p.color}" stroke-width="1.8"/>
+                <circle cx="33.5" cy="28" r="4" fill="none" stroke="${p.color}" stroke-width="1.8"/>
+                <path d="M14.5 30 Q24 38 33.5 30" fill="none" stroke="var(--text)" stroke-width="1.35" stroke-linecap="round"/>
+            `;
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.getAttribute("data-theme") === "light";
+            body.setAttribute("data-theme", isDark ? "dark" : "light");
+
+            const btn = document.getElementById("theme-toggle-btn");
+            btn.setAttribute("aria-label", isDark ? "Passer en mode clair" : "Passer en mode sombre");
+            btn.classList.remove("spin");
+            void btn.offsetWidth; // force le redémarrage de l'animation
+            btn.classList.add("spin");
+        }
+
+        // ==========================================================
+        // NOTIFICATIONS TOAST (remplacent les alert() du navigateur)
+        // ==========================================================
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container");
+            const el = document.createElement("div");
+            el.className = "toast" + (type === "error" ? " toast-error" : type === "warn" ? " toast-warn" : "");
+            el.textContent = message;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = "0";
+                setTimeout(() => el.remove(), 300);
+            }, 3500);
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            ["accueil", "liste", "idee"].forEach(t => {
+                const btn = document.getElementById("nav-" + t);
+                const isActive = t === tab;
+                btn.classList.toggle("active-nav", isActive);
+                if (isActive) btn.setAttribute("aria-current", "page");
+                else btn.removeAttribute("aria-current");
+            });
+            renderApp();
+        }
+
+        function switchView(view) {
+            currentView = view;
+            renderApp();
+        }
+
+        // ==========================================================
+        // CHARGEMENT DU PLANNING (lecture live via Apps Script)
+        // ==========================================================
+
+        const PLANNING_CACHE_KEY = "qgd_planning_cache_v1";
+
+        async function loadPlanning() {
+            const container = document.getElementById("content-container");
+            if (planningData.length === 0) {
+                container.innerHTML = `
+                    <div class="loading-wrap" role="status" aria-live="polite">
+                        <svg class="pour-anim" viewBox="0 0 380 230" aria-hidden="true" style="color:var(--text);">
+                            <clipPath id="pourGlassClip">
+                                <path d="M230,150 C230,166 235,175 242,182 C249,175 254,166 254,150 Z"/>
+                            </clipPath>
+                            <g class="bottle-group">
+                                <path d="M125,190 L125,135 C125,118 133,107 140,101 L140,70 L154,70 L154,101 C161,107 169,118 169,135 L169,188 C169,192 166,195 162,195 L130,195 C126,195 125,193 125,190 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                                <rect x="137" y="59" width="20" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                            </g>
+                            <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
+                            <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
+                            <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
+                            <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
+                            <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
+                            <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
+                            <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
+                            <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
+                            <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
+                            <path d="M230,150 C230,166 235,175 242,182 C249,175 254,166 254,150" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                            <line x1="242" y1="182" x2="242" y2="205" stroke="currentColor" stroke-width="2.5"/>
+                            <ellipse cx="242" cy="208" rx="11" ry="2.8" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                            <rect class="liquid-fill" x="230" width="24" fill="var(--primary)" clip-path="url(#pourGlassClip)"/>
+                        </svg>
+                        <div class="loading-text">Chargement du planning...</div>
+                    </div>
+                `;
+            }
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=getPlanning&t=${Date.now()}`);
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || "Erreur inconnue");
+
+                planningData = result.rows;
+                try {
+                    localStorage.setItem(PLANNING_CACHE_KEY, JSON.stringify(planningData));
+                } catch (storageErr) {
+                    // Stockage local indisponible (navigation privée, etc.) : pas grave, on continue.
+                }
+                renderApp();
+            } catch (error) {
+                // Pas de réseau ou Apps Script injoignable : on retombe sur la dernière
+                // copie connue du planning, si on en a une.
+                let cached = null;
+                try {
+                    const raw = localStorage.getItem(PLANNING_CACHE_KEY);
+                    if (raw) cached = JSON.parse(raw);
+                } catch (storageErr) {
+                    cached = null;
+                }
+
+                if (cached && cached.length > 0) {
+                    planningData = cached;
+                    renderApp();
+                    showToast("Hors-ligne : affichage des dernières données connues.", "warn");
+                } else {
+                    container.innerHTML = "<p role='alert' style='text-align:center; color:#e24b4a;'>Erreur de chargement du planning.</p>";
+                }
+            }
+        }
+
+        // ==========================================================
+        // RENDU
+        // ==========================================================
+        function renderApp() {
+            const container = document.getElementById("content-container");
+            container.innerHTML = "";
+
+            if (currentTab === "accueil") {
+                renderHome(container);
+            } else if (currentTab === "liste") {
+                renderListeTab(container);
+            } else if (currentTab === "idee") {
+                renderIdee(container);
+            }
+        }
+
+        // ----- Onglet Accueil -----
+        function renderHome(container) {
+            const person = PEOPLE.find(p => p.display === currentUser);
+
+            const banner = document.createElement("div");
+            banner.className = "home-banner";
+            if (HOME_BANNER_URL) {
+                banner.innerHTML = `<img src="${HOME_BANNER_URL}" alt="Bannière"><div class="home-banner-scrim"></div>`;
+            }
+
+            const greeting = document.createElement("div");
+            greeting.className = "home-greeting";
+            greeting.innerHTML = `
+                <svg class="avatar-icon" viewBox="0 0 48 48">${avatarSvgInner(person)}</svg>
+                <span>Salut ${currentUser} !</span>
+            `;
+            banner.appendChild(greeting);
+            container.appendChild(banner);
+
+            const eveningCards = renderProposedSlotCards("evening");
+            eveningCards.forEach(html => {
+                const card = document.createElement("div");
+                card.className = "card next-available-card";
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+
+            const dayCards = renderProposedSlotCards("day");
+            dayCards.forEach(html => {
+                const card = document.createElement("div");
+                card.className = "card next-available-card";
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+
+            const overviewCard = document.createElement("div");
+            overviewCard.className = "card";
+            overviewCard.innerHTML = `
+                <div class="overview-label">VUE D'ENSEMBLE</div>
+                <div class="overview-title">${icon("calendar")} Nos dispos ce week-end</div>
+                <div id="overview-rows"></div>
+            `;
+            container.appendChild(overviewCard);
+            renderWeekendOverview(overviewCard.querySelector("#overview-rows"));
+
+            const nextCard = document.createElement("div");
+            nextCard.className = "card next-available-card";
+            nextCard.innerHTML = renderNextAvailable();
+            container.appendChild(nextCard);
+
+            const statsCard = document.createElement("div");
+            statsCard.className = "card";
+            statsCard.style.textAlign = "center";
+            statsCard.innerHTML = renderFunStats();
+            container.appendChild(statsCard);
+
+            if (WHATSAPP_URL) {
+                const waCard = document.createElement("div");
+                waCard.className = "card";
+                waCard.style.textAlign = "center";
+                waCard.innerHTML = `
+                    <div class="overview-label">GROUPE WHATSAPP</div>
+                    <a class="whatsapp-link" href="${WHATSAPP_URL}" target="_blank" rel="noopener">💬 Ouvrir la discussion</a>
+                `;
+                container.appendChild(waCard);
+            }
+        }
+
+        function renderFunStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            let reunionsCount = 0;
+            planningData.forEach(item => {
+                const d = parseDate(item.date);
+                if (!d || d < monthStart || d > today) return;
+                const status = computeGlobalStatus(item);
+                if (status.cls === "status-free" || status.cls === "status-free-kids") reunionsCount++;
+            });
+
+            const counts = PEOPLE.map(p => ({
+                person: p,
+                count: planningData.filter(item => (item[p.key] || "").includes("Dispo")).length
+            })).sort((a, b) => b.count - a.count);
+
+            let mostAvailableText;
+            if (counts.length === 0 || counts[0].count === 0) {
+                mostAvailableText = "Pas encore assez de dispos renseignées pour le savoir.";
+            } else {
+                const topCount = counts[0].count;
+                const tied = counts.filter(c => c.count === topCount).map(c => c.person.display);
+                mostAvailableText = tied.length > 1
+                    ? `${tied.join(" et ")} sont ex æquo, les plus dispo du groupe !`
+                    : `${tied[0]} est la plus dispo du groupe !`;
+            }
+
+            return `
+                <div class="overview-label">PETITES STATS</div>
+                <p style="margin:10px 0 6px;">🎉 Vous vous êtes toutes retrouvées <strong>${reunionsCount}</strong> fois ce mois-ci</p>
+                <p style="margin:0;">🏆 ${mostAvailableText}</p>
+            `;
+        }
+
+        function getUpcomingWeekend() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const day = today.getDay(); // 0=Dim ... 6=Sam
+            let fridayOffset;
+            if (day === 5) fridayOffset = 0;
+            else if (day === 6) fridayOffset = -1;
+            else if (day === 0) fridayOffset = -2;
+            else fridayOffset = 5 - day;
+
+            const friday = new Date(today);
+            friday.setDate(today.getDate() + fridayOffset);
+            const saturday = new Date(friday); saturday.setDate(friday.getDate() + 1);
+            const sunday = new Date(friday); sunday.setDate(friday.getDate() + 2);
+
+            return [
+                { label: "Vendredi", date: friday },
+                { label: "Samedi", date: saturday },
+                { label: "Dimanche", date: sunday }
+            ];
+        }
+
+        function renderWeekendOverview(target) {
+            const weekendDays = getUpcomingWeekend();
+            target.innerHTML = "";
+            weekendDays.forEach(({ label, date }) => {
+                const match = planningData.find(item => {
+                    const d = parseDate(item.date);
+                    return d && d.getFullYear() === date.getFullYear()
+                        && d.getMonth() === date.getMonth()
+                        && d.getDate() === date.getDate();
+                });
+
+                const isWknd = match ? isWeekendDay(match) : (date.getDay() === 0 || date.getDay() === 6);
+
+                let bodyHtml;
+                if (!match) {
+                    bodyHtml = `<div class="day-people">Pas encore renseigné</div>`;
+                } else if (isWknd) {
+                    const journeeNames = PEOPLE.filter(p => (match[p.key + "Journee"] || "").includes("Dispo")).map(p => p.display);
+                    const soireeNames = PEOPLE.filter(p => (match[p.key] || "").includes("Dispo")).map(p => p.display);
+                    bodyHtml = `
+                        <div class="day-people">☀️ Journée : ${journeeNames.length ? journeeNames.join(", ") : "Personne de dispo"}</div>
+                        <div class="day-people">🌙 Soirée : ${soireeNames.length ? soireeNames.join(", ") : "Personne de dispo"}</div>
+                    `;
+                } else {
+                    const dispoNames = PEOPLE.filter(p => (match[p.key] || "").includes("Dispo")).map(p => p.display);
+                    bodyHtml = `<div class="day-people">Dispo : ${dispoNames.length ? dispoNames.join(", ") : "Personne de dispo"}</div>`;
+                }
+
+                const row = document.createElement("div");
+                row.className = "overview-row";
+                row.setAttribute("role", "button");
+                row.setAttribute("tabindex", "0");
+                row.innerHTML = `
+                    <div>
+                        <div class="day-name">${label}</div>
+                        ${bodyHtml}
+                    </div>
+                    <span class="chevron" aria-hidden="true">›</span>
+                `;
+                row.setAttribute("aria-label", `${label} : ${row.textContent.trim()}`);
+                row.onclick = () => goToDate(match, label);
+                row.onkeydown = (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        goToDate(match, label);
+                    }
+                };
+                target.appendChild(row);
+            });
+        }
+
+        function goToDate(match, label) {
+            if (!match) {
+                showToast(`Le ${label} n'est pas encore renseigné dans le planning.`, "warn");
+                return;
+            }
+            currentView = "list";
+            switchTab("liste");
+            requestAnimationFrame(() => {
+                const card = document.querySelector(`[data-row="${match.sheetRow}"]`);
+                if (card) {
+                    card.scrollIntoView({ behavior: "smooth", block: "center" });
+                    card.classList.add("highlight-flash");
+                    setTimeout(() => card.classList.remove("highlight-flash"), 1500);
+                }
+            });
+        }
+
+        // Construit un lien sms: pré-rempli pour annoncer qu'une soirée/journée a été proposée
+        function buildProposalSmsHref(item, slot) {
+            const label = slot === "day" ? "journée" : "soirée";
+            const field = slot === "day" ? "confirmeeJournee" : "confirmee";
+            const text = `Coucou ! Je propose une ${label} le ${item.jour} ${item.date} (${item[field]}). Va mettre ta dispo sur Le QG des Daronnes : ${APP_URL}`;
+            return `sms:?body=${encodeURIComponent(text)}`;
+        }
+
+        // Construit une carte "proposée/confirmée" pour CHAQUE soirée/journée à
+        // venir (pas seulement la plus proche) — seules les dates déjà passées
+        // sont exclues.
+        function renderProposedSlotCards(slot) {
+            const field = slot === "day" ? "confirmeeJournee" : "confirmee";
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const upcoming = planningData
+                .map(item => ({ item, d: parseDate(item.date) }))
+                .filter(x => x.d && x.d >= today && x.item[field])
+                .sort((a, b) => a.d - b.d);
+
+            return upcoming.map(found => {
+                const foundIndex = planningData.indexOf(found.item);
+                const status = computeProposalStatus(found.item, slot);
+                const label = status === "confirmed"
+                    ? (slot === "day" ? "Journée confirmée" : "Soirée confirmée")
+                    : (slot === "day" ? "Journée proposée" : "Soirée proposée");
+                const isoDate = `${found.d.getFullYear()}-${String(found.d.getMonth() + 1).padStart(2, "0")}-${String(found.d.getDate()).padStart(2, "0")}`;
+
+                const smsBtn = status === "proposed"
+                    ? `<a class="sms-link-btn" href="${buildProposalSmsHref(found.item, slot)}" style="margin-top:8px; display:inline-flex;">📱 Envoyer un SMS pour prévenir</a>`
+                    : "";
+
+                return `
+                    <div class="label">${icon("wine")} ${label}</div>
+                    <div class="value">${found.item.jour} ${found.item.date}</div>
+                    <div style="margin-top:4px; opacity:0.8;">${found.item[field]}</div>
+                    <div class="slot-label" style="margin-top:8px; justify-content:center; color:var(--text); opacity:0.65; text-transform:none; letter-spacing:0;">${icon("wine", 14)} Qui vient ?</div>
+                    ${buildParticipationRow(found.item, foundIndex, slot)}
+                    <button onclick="openIcsModal('${isoDate}', '${slot}')" style="margin-top:12px;">${icon("calendar", 16)} Ajouter à mon agenda perso</button>
+                    <div>${smsBtn}</div>
+                `;
+            });
+        }
+
+        function renderNextAvailable() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const upcoming = planningData
+                .map(item => ({ item, d: parseDate(item.date) }))
+                .filter(x => x.d && x.d >= today)
+                .sort((a, b) => a.d - b.d);
+
+            const found = upcoming.find(x => PEOPLE.every(p => (x.item[p.key] || "").includes("Dispo")));
+
+            if (found) {
+                const isoDate = `${found.d.getFullYear()}-${String(found.d.getMonth() + 1).padStart(2, "0")}-${String(found.d.getDate()).padStart(2, "0")}`;
+                return `
+                    <div class="label">${icon("moon")} Prochaine soirée où tout le monde est dispo</div>
+                    <div class="value">${found.item.jour} ${found.item.date}</div>
+                    <button onclick="openIcsModal('${isoDate}')" style="margin-top:12px;">${icon("calendar", 16)} Ajouter à mon agenda perso</button>
+                `;
+            }
+            return `
+                <div class="label">${icon("clock")} Pas encore de date en commun</div>
+                <div class="value">Continuez à mettre vos dispos à jour !</div>
+            `;
+        }
+
+        // Échappe les caractères spéciaux pour un champ de fichier .ics
+        function icsEscape_(text) {
+            return String(text || "")
+                .replace(/\\/g, "\\\\")
+                .replace(/;/g, "\\;")
+                .replace(/,/g, "\\,")
+                .replace(/\n/g, "\\n");
+        }
+
+        // Génère et télécharge un fichier .ics pour ajouter la soirée à un agenda perso.
+        // titreOverride/notesOverride permettent de personnaliser le titre et les notes
+        // (saisis via la pop-up ouverte par openIcsModal).
+        function downloadEventICS(isoDateStr, slot = "evening", titreOverride, notesOverride) {
+            const [y, m, d] = isoDateStr.split("-").map(Number);
+            const pad = (n) => String(n).padStart(2, "0");
+            const heures = slot === "day" ? ["100000", "180000"] : ["200000", "230000"];
+            const dtStart = `${y}${pad(m)}${pad(d)}T${heures[0]}`;
+            const dtEnd = `${y}${pad(m)}${pad(d)}T${heures[1]}`;
+            const dtStamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+            const titre = titreOverride && titreOverride.trim()
+                ? titreOverride.trim()
+                : (slot === "day" ? "☀️ Journée QG des Daronnes" : "🍷 Soirée QG des Daronnes");
+            const notes = notesOverride !== undefined ? notesOverride.trim() : "Moment entre daronnes";
+
+            const ics = [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "PRODID:-//QG des Daronnes//FR",
+                "BEGIN:VEVENT",
+                `UID:qgd-${slot}-${isoDateStr}-${Date.now()}@qgdaronnes`,
+                `DTSTAMP:${dtStamp}`,
+                `DTSTART:${dtStart}`,
+                `DTEND:${dtEnd}`,
+                `SUMMARY:${icsEscape_(titre)}`,
+                `DESCRIPTION:${icsEscape_(notes)}`,
+                "END:VEVENT",
+                "END:VCALENDAR"
+            ].join("\r\n");
+
+            const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `soiree-qgd-${isoDateStr}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Événement téléchargé, ouvre-le pour l'ajouter à ton agenda.");
+        }
+
+        // ==========================================================
+        // POP-UP "AJOUTER A MON AGENDA" (personnalisation titre/notes)
+        // ==========================================================
+        let pendingIcs = null;
+        let icsTriggerEl = null;
+
+        function openIcsModal(isoDateStr, slot = "evening") {
+            pendingIcs = { isoDateStr, slot };
+            icsTriggerEl = document.activeElement;
+
+            const item = planningData.find(p => {
+                const d = parseDate(p.date);
+                return d && isoDateStr_(d) === isoDateStr;
+            });
+            const field = slot === "day" ? "confirmeeJournee" : "confirmee";
+            const motif = item ? (item[field] || "") : "";
+            const defaultTitle = slot === "day" ? "☀️ Journée QG des Daronnes" : "🍷 Soirée QG des Daronnes";
+            const titleWithMotif = motif ? `${defaultTitle} — ${motif}` : defaultTitle;
+
+            document.getElementById("ics-title-input").value = titleWithMotif;
+            document.getElementById("ics-notes-input").value = "Moment entre daronnes";
+            document.getElementById("ics-overlay").classList.add("open");
+            document.getElementById("ics-modal").classList.add("open");
+            setTimeout(() => document.getElementById("ics-title-input").focus(), 50);
+        }
+
+        function closeIcsModal() {
+            document.getElementById("ics-overlay").classList.remove("open");
+            document.getElementById("ics-modal").classList.remove("open");
+            pendingIcs = null;
+            const elToFocus = icsTriggerEl;
+            icsTriggerEl = null;
+            if (elToFocus) setTimeout(() => elToFocus.focus(), 0);
+        }
+
+        function submitIcsDownload() {
+            if (!pendingIcs) return;
+            const titre = document.getElementById("ics-title-input").value;
+            const notes = document.getElementById("ics-notes-input").value;
+            const { isoDateStr, slot } = pendingIcs;
+            closeIcsModal();
+            downloadEventICS(isoDateStr, slot, titre, notes);
+        }
+
+        // ----- Onglet Idée -----
+        const IDEAS = [
+            "Soirée jeux de société 🎲",
+            "Resto entre daronnes 🍕",
+            "Apéro chez l'une de vous 🍷",
+            "Ciné + pyjama party 🍿",
+            "Karaoké improvisé 🎤",
+            "Cours de cuisine maison 👩‍🍳",
+            "Balade + café 🚶‍♀️☕",
+            "Soirée déguisée 🎭",
+            "Pique-nique au parc 🧺"
+        ];
+        const CUSTOM_IDEAS_KEY = "qgd_custom_ideas_v1";
+        let lastIdeaDrawn = null;
+
+        function getCustomIdeas() {
+            try {
+                const raw = localStorage.getItem(CUSTOM_IDEAS_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveCustomIdeas(list) {
+            try {
+                localStorage.setItem(CUSTOM_IDEAS_KEY, JSON.stringify(list));
+            } catch (e) {
+                // Stockage indisponible : tant pis, la liste ne persistera pas.
+            }
+        }
+
+        function getAllIdeas() {
+            return IDEAS.concat(getCustomIdeas());
+        }
+
+        function renderIdee(container) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.style.textAlign = "center";
+            card.innerHTML = `
+                <div class="overview-title">${icon("dice")} Besoin d'inspiration ?</div>
+                <p style="opacity:0.75;">Laisse le hasard choisir votre prochaine soirée !</p>
+                <div id="idee-result" style="font-size:1.3rem; font-weight:bold; margin:20px 0; min-height:1.6em;">?</div>
+                <button onclick="tirerIdee()">${icon("dice", 16)} Tirer une idée</button>
+            `;
+            container.appendChild(card);
+
+            const addCard = document.createElement("div");
+            addCard.className = "card";
+            addCard.innerHTML = `
+                <div class="overview-label" style="text-align:center;">VOS IDÉES</div>
+                <label for="new-idea-input" class="sr-only">Ajouter une idée de soirée</label>
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <input type="text" id="new-idea-input" class="search-input" style="margin-bottom:0;" placeholder="Ex: Soirée pâtisserie 🧁" maxlength="60">
+                    <button id="add-idea-btn" style="flex-shrink:0;">Ajouter</button>
+                </div>
+                <div id="custom-ideas-list" style="margin-top:12px;"></div>
+            `;
+            container.appendChild(addCard);
+            renderCustomIdeasList();
+
+            addCard.querySelector("#add-idea-btn").onclick = addCustomIdea;
+            addCard.querySelector("#new-idea-input").onkeydown = (e) => {
+                if (e.key === "Enter") addCustomIdea();
+            };
+
+            const outingCard = document.createElement("div");
+            outingCard.className = "card";
+            outingCard.style.textAlign = "center";
+            outingCard.innerHTML = `
+                <div class="overview-title">Envie de sortir à Besançon ?</div>
+                <p style="opacity:0.75; margin-top:-6px;">Idées d'expos, spectacles et loisirs près de chez vous</p>
+                <iframe src="https://sortir.besancon.fr/" title="Sortir à Besançon"
+                        style="width:100%; height:480px; border:1px solid var(--border); border-radius:8px; margin:12px 0;"
+                        loading="lazy"></iframe>
+                <a class="whatsapp-link" href="https://sortir.besancon.fr/" target="_blank" rel="noopener">
+                    Ouvrir Sortir à Besançon dans un nouvel onglet
+                </a>
+                <p style="font-size:0.75rem; opacity:0.6; margin-top:8px;">
+                    Si le cadre ci-dessus reste vide, utilise le lien : certains sites bloquent l'affichage intégré.
+                </p>
+            `;
+            container.appendChild(outingCard);
+        }
+
+        function renderCustomIdeasList() {
+            const listEl = document.getElementById("custom-ideas-list");
+            if (!listEl) return;
+            const customIdeas = getCustomIdeas();
+            if (customIdeas.length === 0) {
+                listEl.innerHTML = `<p style="font-size:0.8rem; opacity:0.6; margin:0;">Aucune idée ajoutée pour l'instant.</p>`;
+                return;
+            }
+            listEl.innerHTML = customIdeas.map((idea, i) => `
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid var(--border);">
+                    <span style="font-size:0.9rem;">${idea}</span>
+                    <button onclick="removeCustomIdea(${i})" aria-label="Retirer cette idée" style="padding:4px 10px;">✕</button>
+                </div>
+            `).join("");
+        }
+
+        function addCustomIdea() {
+            const input = document.getElementById("new-idea-input");
+            const value = input.value.trim();
+            if (!value) return;
+            const customIdeas = getCustomIdeas();
+            customIdeas.push(value);
+            saveCustomIdeas(customIdeas);
+            input.value = "";
+            renderCustomIdeasList();
+            showToast("Idée ajoutée !");
+        }
+
+        function removeCustomIdea(index) {
+            const customIdeas = getCustomIdeas();
+            customIdeas.splice(index, 1);
+            saveCustomIdeas(customIdeas);
+            renderCustomIdeasList();
+        }
+
+        function tirerIdee() {
+            const resultEl = document.getElementById("idee-result");
+            const pool = getAllIdeas();
+            let count = 0;
+            const spin = setInterval(() => {
+                resultEl.textContent = pool[Math.floor(Math.random() * pool.length)];
+                count++;
+                if (count > 10) {
+                    clearInterval(spin);
+                    // Évite de retomber deux fois de suite sur la même idée (si le pool le permet)
+                    let finalPick = pool[Math.floor(Math.random() * pool.length)];
+                    let attempts = 0;
+                    while (finalPick === lastIdeaDrawn && pool.length > 1 && attempts < 10) {
+                        finalPick = pool[Math.floor(Math.random() * pool.length)];
+                        attempts++;
+                    }
+                    lastIdeaDrawn = finalPick;
+                    resultEl.textContent = finalPick;
+                }
+            }, 80);
+        }
+
+        // ----- Onglet Liste (Vue Liste / Vue Calendrier) -----
+        function renderListeTab(container) {
+            const controls = document.createElement("div");
+            controls.className = "controls";
+            controls.innerHTML = `
+                <button id="btn-view-list" onclick="switchView('list')" aria-pressed="${currentView === 'list'}">${icon("list", 16)} Vue Liste</button>
+                <button id="btn-view-calendar" onclick="switchView('calendar')" aria-pressed="${currentView === 'calendar'}">${icon("calendar", 16)} Vue Calendrier Mensuel</button>
+            `;
+            container.appendChild(controls);
+            controls.querySelector("#btn-view-list").classList.toggle("active-view", currentView === "list");
+            controls.querySelector("#btn-view-calendar").classList.toggle("active-view", currentView === "calendar");
+
+            if (currentView === "list") {
+                const searchWrap = document.createElement("div");
+                const safeQuery = listSearchQuery.replace(/"/g, "&quot;");
+                searchWrap.innerHTML = `
+                    <label for="list-search" class="sr-only">Rechercher une date dans la liste</label>
+                    <input type="text" id="list-search" class="search-input" placeholder="Rechercher (ex: vendredi, 15/08)" value="${safeQuery}">
+                `;
+                container.appendChild(searchWrap);
+                searchWrap.querySelector("#list-search").oninput = (e) => {
+                    listSearchQuery = e.target.value;
+                    listVisibleCount = 20;
+                    renderListResults();
+                };
+            } else {
+                const searchWrap = document.createElement("div");
+                searchWrap.innerHTML = `
+                    <label for="calendar-search" class="sr-only">Rechercher une date dans le calendrier</label>
+                    <input type="text" id="calendar-search" class="search-input" placeholder="Rechercher une date (ex: vendredi, 15/08) puis Entrée">
+                `;
+                container.appendChild(searchWrap);
+                searchWrap.querySelector("#calendar-search").onkeydown = (e) => {
+                    if (e.key !== "Enter") return;
+                    const q = e.target.value.trim().toLowerCase();
+                    if (!q) return;
+                    const match = planningData.find(item =>
+                        item.jour.toLowerCase().includes(q) || item.date.toLowerCase().includes(q)
+                    );
+                    if (!match) {
+                        showToast("Aucune date trouvée pour cette recherche.", "warn");
+                        return;
+                    }
+                    const d = parseDate(match.date);
+                    if (d) {
+                        calYear = d.getFullYear();
+                        calMonth = d.getMonth();
+                        selectedCalendarKey = isoDateStr_(d);
+                    }
+                    renderApp();
+                    requestAnimationFrame(() => {
+                        const idx = planningData.indexOf(match);
+                        if (idx !== -1) showDayDetail(idx);
+                    });
+                };
+            }
+
+            const inner = document.createElement("div");
+            inner.id = "planning-inner";
+            container.appendChild(inner);
+
+            if (currentView === "list") {
+                renderListResults();
+            } else {
+                renderCalendarView(inner);
+            }
+        }
+
+        function renderListResults() {
+            const container = document.getElementById("planning-inner");
+            if (!container) return;
+            container.innerHTML = "";
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let filtered = planningData.filter(item => {
+                const d = parseDate(item.date);
+                return d && d >= today;
+            });
+
+            if (listSearchQuery.trim() !== "") {
+                const q = listSearchQuery.trim().toLowerCase();
+                filtered = filtered.filter(item =>
+                    item.jour.toLowerCase().includes(q) || item.date.toLowerCase().includes(q)
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = "<p style='text-align:center; opacity:0.6;'>Aucune date à venir ne correspond.</p>";
+                return;
+            }
+
+            const toShow = filtered.slice(0, listVisibleCount);
+            toShow.forEach(item => {
+                const realIndex = planningData.indexOf(item);
+                container.appendChild(buildCard(item, realIndex));
+            });
+
+            if (filtered.length > listVisibleCount) {
+                const moreWrap = document.createElement("div");
+                moreWrap.style.textAlign = "center";
+                moreWrap.style.marginTop = "8px";
+                const moreBtn = document.createElement("button");
+                moreBtn.textContent = "Voir plus de dates";
+                moreBtn.onclick = () => {
+                    listVisibleCount += 20;
+                    renderListResults();
+                };
+                moreWrap.appendChild(moreBtn);
+                container.appendChild(moreWrap);
+            }
+        }
+
+        async function manualRefresh() {
+            const btn = document.getElementById("menu-refresh-btn");
+            const label = btn.querySelector("span");
+            const original = label.textContent;
+            btn.disabled = true;
+            label.textContent = "Actualisation...";
+            await loadPlanning();
+            label.textContent = "Actualisé ✓";
+            setTimeout(() => {
+                label.textContent = original;
+                btn.disabled = false;
+                closeMenu();
+            }, 1000);
+        }
+
+        // Icônes SVG en contour réutilisables (même style que les avatars/nav)
+        function icon(name, size = 18) {
+            const paths = {
+                moon: `<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/>`,
+                calendar: `<rect x="4" y="5" width="16" height="15" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/>`,
+                list: `<circle cx="5" cy="6" r="1.2" fill="currentColor" stroke="none"/><line x1="9" y1="6" x2="20" y2="6"/><circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none"/><line x1="9" y1="12" x2="20" y2="12"/><circle cx="5" cy="18" r="1.2" fill="currentColor" stroke="none"/><line x1="9" y1="18" x2="20" y2="18"/>`,
+                dice: `<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor" stroke="none"/>`,
+                clock: `<circle cx="12" cy="12" r="8"/><polyline points="12 8 12 12 15 14"/>`,
+                sun: `<circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>`,
+                wine: `<path d="M6 3h12c-0.5 5-2.5 9-6 9s-5.5-4-6-9Z"/><line x1="12" y1="12" x2="12" y2="19"/><line x1="8" y1="21" x2="16" y2="21"/>`
+            };
+            return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="${size}" height="${size}" style="vertical-align:-4px; margin-right:4px;" aria-hidden="true">${paths[name] || ""}</svg>`;
+        }
+
+        function getCurrentPersonKey() {
+            const person = PEOPLE.find(p => p.display === currentUser);
+            return person ? person.key : null;
+        }
+
+        // Un jour est "week-end" si c'est un Samedi ou un Dimanche
+        function isWeekendDay(item) {
+            const d = parseDate(item.date);
+            if (!d) return false;
+            const day = d.getDay();
+            return day === 0 || day === 6;
+        }
+
+        // Un jour a une case "Journée" (en plus de la "Soirée") si c'est un
+        // week-end, un jour férié, ou un jour de vacances scolaires zone A —
+        // même si ce jour férié/vacances tombe un jour de semaine.
+        function hasJourneeSlot(item) {
+            if (isWeekendDay(item)) return true;
+            const d = parseDate(item.date);
+            if (!d) return false;
+            return isJourFerie(d) || isVacancesZoneA(d);
+        }
+
+        // Calcule le statut global à partir des statuts (indépendant de la
+        // colonne "Analyse" du Sheet, pour garder la main sur le texte affiché).
+        // Les jours avec une case "Journée" (week-end, férié, vacances) comptent
+        // la Journée ET la Soirée.
+        function computeGlobalStatus(item) {
+            const journeeSlot = hasJourneeSlot(item);
+            const statuses = [];
+            PEOPLE.forEach(p => {
+                statuses.push((item[p.key] || "").trim());
+                if (journeeSlot) statuses.push((item[p.key + "Journee"] || "").trim());
+            });
+            const hasIndispo = statuses.some(s => s !== "" && !s.includes("Dispo"));
+            if (hasIndispo) {
+                return { text: "Pas toutes dispo", cls: "status-blocked" };
+            }
+            const hasPending = statuses.some(s => s === "");
+            if (hasPending) {
+                return { text: "En attente de réponses", cls: "status-pending" };
+            }
+            const hasEnfants = statuses.some(s => s.includes("enfants") || s.includes("👶"));
+            if (hasEnfants) {
+                return { text: "Libre avec enfants", cls: "status-free-kids" };
+            }
+            return { text: "Tout le monde est libre !", cls: "status-free" };
+        }
+
+        // Détermine l'état "pastille" d'une personne pour un créneau : la
+        // COULEUR reste toujours celle de la personne, seule la forme change.
+        // 'inconnu' = rond gris | 'dispo' = rond coloré | 'enfants' = triangle coloré | 'indispo' = croix colorée
+        function pastilleState(rawState) {
+            rawState = rawState || "";
+            if (rawState.trim() === "") return "inconnu";
+            if (rawState.includes("enfants") || rawState.includes("👶")) return "enfants";
+            if (rawState.includes("Dispo")) return "dispo";
+            return "indispo";
+        }
+
+        function pastilleCrossSVG(color, size = 16) {
+            return `<svg class="pastille-cross" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true">
+                <line x1="6" y1="6" x2="18" y2="18" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+                <line x1="18" y1="6" x2="6" y2="18" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+            </svg>`;
+        }
+
+        // Triangle plein aux coins légèrement arrondis (utilisé pour "dispo avec
+        // enfants" à la place du carré, partout où une pastille est affichée).
+        function pastilleTriangleSVG(color, size = 16) {
+            return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true">
+                <path d="M12.7,4.4 L19.8,18.1 Q20.5,19.5 18.9,19.5 L5.1,19.5 Q3.5,19.5 4.2,18.1 L11.3,4.4 Q12,3 12.7,4.4 Z" fill="${color}"/>
+            </svg>`;
+        }
+
+        // Réponse "je viens / je viens pas" à une soirée/journée PROPOSÉE — totalement
+        // indépendante des dispos générales (quelqu'un peut être dispo mais ne pas
+        // vouloir faire l'activité proposée, ou inversement se libérer pour l'occasion).
+        function participationState(rawState) {
+            rawState = (rawState || "").trim();
+            if (rawState === "Oui") return "oui";
+            if (rawState === "Non") return "non";
+            return "inconnu";
+        }
+
+        function nextParticipation(current) {
+            current = (current || "").trim();
+            if (current === "") return "Oui";
+            if (current === "Oui") return "Non";
+            return "Oui";
+        }
+
+        // Remet à zéro les réponses de participation pour un créneau (nouvelle
+        // proposition, ou annulation) sans toucher aux dispos générales.
+        function resetParticipation_(item, slot) {
+            PEOPLE.forEach(p => {
+                const dataKey = slot === "day" ? (p.key + "ParticipeJournee") : (p.key + "Participe");
+                item[dataKey] = "";
+            });
+        }
+
+        // Construit la rangée "Qui vient ?" pour une soirée/journée proposée.
+        // Ne modifie jamais les colonnes de dispo générale.
+        function buildParticipationRow(item, index, slot) {
+            const myKey = getCurrentPersonKey();
+            return `
+                <div class="participants-row participation-row">
+                    ${PEOPLE.map(p => {
+                        const isMine = p.key === myKey;
+                        const dataKey = slot === "day" ? (p.key + "ParticipeJournee") : (p.key + "Participe");
+                        const rawState = item[dataKey] || "";
+                        const state = participationState(rawState);
+
+                        const stateLabel = state === "inconnu" ? "n'a pas encore répondu à la proposition"
+                            : state === "oui" ? "vient"
+                            : "ne vient pas";
+                        const content = state === "non" ? pastilleCrossSVG(p.color, 34) : "";
+                        return `
+                        <div class="participant-badge">
+                            <span>${p.short}</span>
+                            <button class="round-btn part-${state}"
+                                    style="--pastille-color:${p.color}"
+                                    aria-label="${p.display} : ${stateLabel}${isMine ? ', appuyer pour changer' : ''}"
+                                    ${isMine
+                                        ? `onclick="changeParticipation(${index}, '${p.key}', '${slot}')"`
+                                        : `disabled title="Seule ${p.display} peut répondre pour elle-même"`}>
+                                <span aria-hidden="true">${content}</span>
+                            </button>
+                        </div>
+                    `;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        async function changeParticipation(index, personKey, slot = "evening") {
+            const item = planningData[index];
+            const person = PEOPLE.find(p => p.key === personKey);
+            const dataKey = slot === "day" ? (personKey + "ParticipeJournee") : (personKey + "Participe");
+            const columnName = slot === "day" ? person.columnParticipeJournee : person.columnParticipe;
+            const oldVal = item[dataKey];
+            const newVal = nextParticipation(oldVal);
+
+            item[dataKey] = newVal;
+            renderApp();
+
+            try {
+                const url = `${APPS_SCRIPT_URL}?action=updateParticipation`
+                    + `&row=${item.sheetRow}`
+                    + `&personne=${encodeURIComponent(columnName)}`
+                    + `&statut=${encodeURIComponent(newVal)}`;
+                const resp = await fetch(url);
+                const result = await resp.json();
+                if (!result.success) {
+                    showToast("Erreur d'enregistrement : " + (result.error || "inconnue"), "error");
+                    item[dataKey] = oldVal;
+                    renderApp();
+                }
+            } catch (err) {
+                showToast("Erreur réseau : la réponse n'a pas pu être sauvegardée. Nouvelle tentative au prochain chargement.", "error");
+                item[dataKey] = oldVal;
+                renderApp();
+            }
+        }
+
+        // Construit la rangée de pastilles pour un créneau donné ('evening' = soirée, 'day' = journée)
+        // Les dispos restent toujours visibles et modifiables, qu'une soirée soit proposée ou non.
+        function buildParticipantsRow(item, index, slot) {
+            const myKey = getCurrentPersonKey();
+            return `
+                <div class="participants-row">
+                    ${PEOPLE.map(p => {
+                        const isMine = p.key === myKey;
+                        const dataKey = slot === "day" ? (p.key + "Journee") : p.key;
+                        const rawState = item[dataKey] || "";
+                        const state = pastilleState(rawState);
+
+                        const stateLabel = state === "inconnu" ? "pas encore répondu"
+                            : state === "enfants" ? "disponible avec enfants"
+                            : state === "dispo" ? "disponible"
+                            : "indisponible";
+                        const content = state === "indispo" ? pastilleCrossSVG(p.color, 34)
+                            : state === "enfants" ? pastilleTriangleSVG(p.color, 34)
+                            : "";
+                        return `
+                        <div class="participant-badge">
+                            <span>${p.short}</span>
+                            <button class="round-btn state-${state}"
+                                    style="--pastille-color:${p.color}"
+                                    aria-label="${p.display} : ${stateLabel}${isMine ? ', appuyer pour changer' : ''}"
+                                    ${isMine
+                                        ? `onclick="changeStatus(${index}, '${p.key}', '${slot}')"`
+                                        : `disabled title="Seule ${p.display} peut modifier son statut"`}>
+                                <span aria-hidden="true">${content}</span>
+                            </button>
+                        </div>
+                    `;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        // Statut d'une proposition de soirée/journée : 'none' (rien proposé),
+        // 'proposed' (proposée, en attente ou pas assez de monde) ou
+        // 'confirmed' (tout le monde a répondu ET au moins 2 sont dispo).
+        // Statut d'une proposition de soirée/journée : 'none' (rien proposé),
+        // 'proposed' (proposée, en attente ou pas assez de monde partant) ou
+        // 'confirmed' (tout le monde a répondu à la proposition ET au moins 2
+        // ont dit "je viens"). Basé sur les réponses de PARTICIPATION, pas sur
+        // les dispos générales (être dispo ne veut pas dire vouloir y aller).
+        function computeProposalStatus(item, slot) {
+            const confirmField = slot === "day" ? "confirmeeJournee" : "confirmee";
+            if (!item[confirmField]) return "none";
+            const statuses = PEOPLE.map(p => (item[slot === "day" ? (p.key + "ParticipeJournee") : (p.key + "Participe")] || "").trim());
+            const allAnswered = statuses.every(s => s !== "");
+            const ouiCount = statuses.filter(s => s === "Oui").length;
+            if (allAnswered && ouiCount >= 2) return "confirmed";
+            return "proposed";
+        }
+
+        // Bloc "Proposer cette soirée/journée" (bouton discret), ou barre
+        // grise (proposée) / barre à segments colorés (confirmée automatiquement).
+        function buildProposalBar(item, index, slot) {
+            const confirmField = slot === "day" ? "confirmeeJournee" : "confirmee";
+            const label = slot === "day" ? "journée" : "soirée";
+            const unconfirmFn = slot === "day" ? "unconfirmJournee" : "unconfirmSoiree";
+            const status = computeProposalStatus(item, slot);
+
+            if (status === "none") {
+                return `
+                    <div class="confirm-btn-wrap">
+                        <button class="btn-subtle" onclick="openConfirmModal(${index}, '${slot}')">${icon("wine", 16)} Proposer cette ${label}</button>
+                    </div>
+                `;
+            }
+
+            if (status === "confirmed") {
+                const partants = PEOPLE.filter(p => (item[slot === "day" ? (p.key + "ParticipeJournee") : (p.key + "Participe")] || "") === "Oui");
+                const segments = partants.map(p => `<span style="flex:1; background:${p.color};"></span>`).join("");
+                const labelCap = label.charAt(0).toUpperCase() + label.slice(1);
+                return `
+                    <div class="proposal-bar-wrap is-confirmed">
+                        <div class="proposal-bar-segments">${segments}</div>
+                        <div class="proposal-bar-body">
+                            <span>${icon("wine", 14)} ${labelCap} confirmée : ${item[confirmField]}</span>
+                            <button onclick="${unconfirmFn}(${index})">Annuler</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // status === "proposed"
+            const statuses = PEOPLE.map(p => (item[slot === "day" ? (p.key + "ParticipeJournee") : (p.key + "Participe")] || "").trim());
+            const allAnswered = statuses.every(s => s !== "");
+            const message = allAnswered
+                ? `<span class="proposal-bar-warning">Pas assez de monde partant pour l'instant — annuler la proposition ?</span>`
+                : `<span>${icon("wine", 14)} Proposée : ${item[confirmField]} — en attente de réponses</span>`;
+            const cancelLabel = allAnswered ? "Annuler la proposition" : "Annuler";
+            const smsLink = `<a href="${buildProposalSmsHref(item, slot)}" style="text-decoration:none; color:inherit; font-size:0.72rem; font-weight:bold; text-decoration:underline;">📱 SMS</a>`;
+            return `
+                <div class="proposal-bar-wrap is-grey">
+                    <div class="proposal-bar-body">
+                        ${message}
+                        <span style="display:flex; gap:10px; align-items:center;">
+                            ${smsLink}
+                            <button onclick="${unconfirmFn}(${index})">${cancelLabel}</button>
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Badges "Proposée" / "Confirmée" affichés à côté de la date, en plus
+        // du badge de statut global existant.
+        function proposalBadgesHtml(item, journeeSlot) {
+            const slots = journeeSlot ? ["day", "evening"] : ["evening"];
+            const badges = [];
+            slots.forEach(slot => {
+                const status = computeProposalStatus(item, slot);
+                if (status === "none") return;
+                const slotIcon = slot === "day" ? "☀️" : "🌙";
+                badges.push(status === "confirmed"
+                    ? `<span class="badge-confirmed">${slotIcon} Confirmée</span>`
+                    : `<span class="badge-proposed">${slotIcon} Proposée</span>`);
+            });
+            return badges.join("");
+        }
+
+        // Construit le bloc complet d'un créneau : dispos générales, puis (si une
+        // proposition existe) la rangée "Qui vient ?" séparée, puis la barre.
+        function buildSlotBlock(item, index, slot) {
+            const status = computeProposalStatus(item, slot);
+            const participationHtml = status !== "none"
+                ? `
+                    <div class="slot-label" style="margin-top:8px; color:var(--text); opacity:0.65; text-transform:none; letter-spacing:0;">${icon("wine", 14)} Qui vient à cette proposition ?</div>
+                    ${buildParticipationRow(item, index, slot)}
+                `
+                : "";
+            return `
+                ${buildParticipantsRow(item, index, slot)}
+                ${participationHtml}
+                ${buildProposalBar(item, index, slot)}
+            `;
+        }
+
+        function buildCard(item, index) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.dataset.row = item.sheetRow;
+            const globalStatus = computeGlobalStatus(item);
+            const journeeSlot = hasJourneeSlot(item);
+            const badges = proposalBadgesHtml(item, journeeSlot);
+
+            const rowsHtml = journeeSlot
+                ? `
+                    <div class="slot-label">${icon("sun", 14)} Journée</div>
+                    ${buildSlotBlock(item, index, "day")}
+                    <div class="slot-label" style="margin-top:10px;">${icon("moon", 14)} Soirée</div>
+                    ${buildSlotBlock(item, index, "evening")}
+                `
+                : `
+                    ${buildSlotBlock(item, index, "evening")}
+                `;
+
+            card.innerHTML = `
+                <div class="date-header">
+                    <span>${item.jour} ${item.date}</span>
+                    <span class="status-global ${globalStatus.cls}">${globalStatus.text}</span>
+                    ${badges ? `<div class="extra-badges">${badges}</div>` : ""}
+                </div>
+                ${rowsHtml}
+            `;
+            return card;
+        }
+
+        // ==========================================================
+        // CYCLE DE STATUT + ECRITURE REELLE VERS GOOGLE SHEETS
+        // Ordre : (pas encore répondu) -> Dispo -> Indispo -> Dispo - enfants -> Dispo
+        // ==========================================================
+        function nextStatus(current) {
+            current = current || "";
+            if (current.trim() === "") return "Dispo";
+            if (current.includes("enfants")) return "Dispo";
+            if (current.includes("Dispo")) return "Indispo";
+            return "Dispo - enfants";
+        }
+
+        async function changeStatus(index, personKey, slot = "evening") {
+            if (APPS_SCRIPT_URL.includes("COLLE_ICI")) {
+                showToast("L'URL de l'Apps Script n'a pas encore été configurée dans le code (APPS_SCRIPT_URL).", "error");
+                return;
+            }
+
+            const item = planningData[index];
+            const person = PEOPLE.find(p => p.key === personKey);
+            const dataKey = slot === "day" ? (personKey + "Journee") : personKey;
+            const columnName = slot === "day" ? person.columnJournee : person.column;
+            const oldVal = item[dataKey];
+            const newVal = nextStatus(oldVal);
+
+            // Mise à jour optimiste de l'affichage
+            item[dataKey] = newVal;
+            renderApp();
+
+            try {
+                const url = `${APPS_SCRIPT_URL}?action=updateStatus`
+                    + `&row=${item.sheetRow}`
+                    + `&personne=${encodeURIComponent(columnName)}`
+                    + `&statut=${encodeURIComponent(newVal)}`;
+                const resp = await fetch(url);
+                const result = await resp.json();
+
+                if (!result.success) {
+                    showToast("Erreur d'enregistrement : " + (result.error || "inconnue"), "error");
+                    item[dataKey] = oldVal; // on annule le changement local
+                    renderApp();
+                }
+            } catch (err) {
+                showToast("Erreur réseau : le statut n'a pas pu être sauvegardé. Nouvelle tentative au prochain chargement.", "error");
+                item[dataKey] = oldVal;
+                renderApp();
+            }
+        }
+
+        // ==========================================================
+        // VUE CALENDRIER MENSUEL (vraie grille)
+        // ==========================================================
+        function parseDate(str) {
+            if (!str) return null;
+            str = str.trim();
+            let m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (m) return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+            m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+            if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
+            const d = new Date(str);
+            return isNaN(d) ? null : d;
+        }
+
+        // Rangée de 4 mini-pastilles (une par personne) pour un créneau donné,
+        // utilisée dans les cases de la vue calendrier.
+        function buildMiniPastilleRow(item, slot) {
+            return `
+                <div class="mini-pastille-row" aria-hidden="true">
+                    ${PEOPLE.map(p => {
+                        const dataKey = slot === "day" ? (p.key + "Journee") : p.key;
+                        const rawState = item[dataKey] || "";
+                        const state = pastilleState(rawState);
+                        const content = state === "indispo" ? pastilleCrossSVG(p.color, 9)
+                            : state === "enfants" ? pastilleTriangleSVG(p.color, 9)
+                            : "";
+                        return `<span class="mini-pastille state-${state}" style="--pastille-color:${p.color}">${content}</span>`;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        function renderCalendarView(container) {
+            const monthNames = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+
+            const nav = document.createElement("div");
+            nav.className = "card";
+            nav.innerHTML = `
+                <div class="calendar-nav">
+                    <button onclick="changeMonth(-1)">←</button>
+                    <span>${monthNames[calMonth]} ${calYear}</span>
+                    <button onclick="changeMonth(1)">→</button>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+                <div class="calendar-legend">
+                    <span><span class="holiday-dot"></span> Jour férié</span>
+                    <span><span class="vac-swatch"></span> Vacances zone A</span>
+                </div>
+            `;
+            container.appendChild(nav);
+
+            const detail = document.createElement("div");
+            detail.id = "calendar-day-detail";
+            container.appendChild(detail);
+
+            const grid = nav.querySelector("#calendar-grid");
+            ["Lu","Ma","Me","Je","Ve","Sa","Di"].forEach(d => {
+                const h = document.createElement("div");
+                h.className = "calendar-day-header";
+                h.textContent = d;
+                grid.appendChild(h);
+            });
+
+            const firstOfMonth = new Date(calYear, calMonth, 1);
+            // Lundi = 0 ... Dimanche = 6
+            const startOffset = (firstOfMonth.getDay() + 6) % 7;
+            const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+            for (let i = 0; i < startOffset; i++) {
+                const empty = document.createElement("div");
+                empty.className = "calendar-day empty";
+                grid.appendChild(empty);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cellDate = new Date(calYear, calMonth, day);
+                const cellIso = isoDateStr_(cellDate);
+                const matchIndex = planningData.findIndex(item => {
+                    const d = parseDate(item.date);
+                    return d && d.getFullYear() === cellDate.getFullYear()
+                        && d.getMonth() === cellDate.getMonth()
+                        && d.getDate() === cellDate.getDate();
+                });
+
+                const ferie = isJourFerie(cellDate);
+                const vacances = isVacancesZoneA(cellDate);
+
+                const cell = document.createElement("div");
+                let cls = "calendar-day";
+                if (matchIndex !== -1) cls += " has-event";
+                if (vacances) cls += " on-vacances";
+                if (cellIso === selectedCalendarKey) cls += " selected-day";
+                cell.className = cls;
+                cell.dataset.iso = cellIso;
+
+                cell.innerHTML = `
+                    <div class="day-number-row">
+                        <span aria-hidden="true">${day}</span>
+                        ${ferie ? '<span class="holiday-dot" aria-hidden="true"></span>' : ''}
+                    </div>
+                `;
+
+                if (matchIndex !== -1) {
+                    const matchItem = planningData[matchIndex];
+                    if (hasJourneeSlot(matchItem)) {
+                        cell.innerHTML += buildMiniPastilleRow(matchItem, "day");
+                        cell.innerHTML += buildMiniPastilleRow(matchItem, "evening");
+                    } else {
+                        cell.innerHTML += buildMiniPastilleRow(matchItem, "evening");
+                    }
+                    cell.setAttribute("role", "button");
+                    cell.setAttribute("tabindex", "0");
+                    const statusText = computeGlobalStatus(matchItem).text;
+                    const feriePart = ferie ? ", jour férié" : "";
+                    const vacPart = vacances ? ", vacances zone A" : "";
+                    cell.setAttribute("aria-label", `${day} ${monthNames[calMonth]} : ${statusText}${feriePart}${vacPart}`);
+                    cell.onclick = () => selectCalendarDay(cellIso, matchIndex);
+                    cell.onkeydown = (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            selectCalendarDay(cellIso, matchIndex);
+                        }
+                    };
+                } else {
+                    if (!ferie && !vacances) cell.setAttribute("aria-hidden", "true");
+                }
+                grid.appendChild(cell);
+            }
+
+            // Si un jour était sélectionné et reste visible ce mois-ci, on
+            // réaffiche son détail automatiquement.
+            if (selectedCalendarKey) {
+                const stillThere = planningData.findIndex(item => {
+                    const d = parseDate(item.date);
+                    return d && isoDateStr_(d) === selectedCalendarKey;
+                });
+                if (stillThere !== -1) showDayDetail(stillThere);
+            }
+        }
+
+        // Sélectionne un jour dans la vue calendrier : le contour reste affiché
+        // tant qu'on ne clique pas sur un autre jour (ou change de mois).
+        function selectCalendarDay(iso, index) {
+            selectedCalendarKey = iso;
+            const grid = document.getElementById("calendar-grid");
+            if (grid) {
+                grid.querySelectorAll(".calendar-day.selected-day").forEach(el => el.classList.remove("selected-day"));
+                const cell = grid.querySelector(`[data-iso="${iso}"]`);
+                if (cell) cell.classList.add("selected-day");
+            }
+            showDayDetail(index);
+        }
+
+        function showDayDetail(index) {
+            const detail = document.getElementById("calendar-day-detail");
+            detail.innerHTML = "";
+            detail.appendChild(buildCard(planningData[index], index));
+        }
+
+        function changeMonth(delta) {
+            calMonth += delta;
+            if (calMonth < 0) { calMonth = 11; calYear--; }
+            if (calMonth > 11) { calMonth = 0; calYear++; }
+            renderApp();
+        }
+
+        // ==========================================================
+        // BOUTON REMONTER EN HAUT
+        // ==========================================================
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        window.addEventListener("scroll", () => {
+            const btn = document.getElementById("scroll-top-btn");
+            if (!btn) return;
+            btn.style.display = window.scrollY > 300 ? "flex" : "none";
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key !== "Escape") return;
+            if (document.getElementById("pin-modal").classList.contains("open")) {
+                closePinModal();
+            } else if (document.getElementById("faq-modal").classList.contains("open")) {
+                closeFaqModal();
+            } else if (document.getElementById("menu-drawer").classList.contains("open")) {
+                closeMenu();
+            }
+        });
+
+        // ==========================================================
+        // PWA : enregistrement du service worker
+        // ==========================================================
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("sw.js").catch(() => {
+                    // Pas grave si ça échoue (ex: ouverture en local sans serveur) :
+                    // l'app fonctionne quand même normalement.
+                });
+            });
+        }
+
+        // ==========================================================
+        // INITIALISATION
+        // ==========================================================
+        buildLoginScreen();
+
+        (function restoreSession() {
+            try {
+                const savedUser = localStorage.getItem(SESSION_KEY);
+                if (savedUser && PEOPLE.some(p => p.display === savedUser)) {
+                    login(savedUser);
+                }
+            } catch (e) {
+                // Pas de session à restaurer, on reste sur l'écran de connexion.
+            }
+        })();
+    </script>
+</body>
+</html>

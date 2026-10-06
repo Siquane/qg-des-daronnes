@@ -10,13 +10,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "logo-qgd.png?v=3",
+      "src": "logo-qgd-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "logo-qgd.png?v=3",
+      "src": "logo-qgd-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

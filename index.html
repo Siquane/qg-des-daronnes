@@ -1916,8 +1916,12 @@
                 html: "Choisis ton avatar sur l'écran d'accueil puis entre ton code PIN à 4 chiffres. L'appli se souvient de toi au prochain lancement (\"Changer de profil\" dans le menu pour te déconnecter)."
             },
             {
+                title: "📲 Installer l'appli sur ton téléphone",
+                html: "Ouvre le lien de l'appli, puis : <strong>Android</strong> → menu ⋮ → « Installer l'application » ou « Ajouter à l'écran d'accueil » ; <strong>iPhone</strong> → bouton Partager → « Sur l'écran d'accueil ». Tu retrouves ensuite l'icône du QG comme une vraie appli."
+            },
+            {
                 title: "🔵 Les pastilles : donner ta dispo",
-                html: `Sur chaque soirée/journée, 4 pastilles (une par personne) indiquent les dispos. La <strong>couleur</strong> est toujours celle de la personne, seule la <strong>forme</strong> change :
+                html: `Sur chaque jour, 4 pastilles (une par personne) indiquent les dispos de la <strong>soirée</strong>. Le week-end, les jours fériés et les vacances scolaires zone A, il y a aussi une rangée pour la <strong>journée</strong>. La <strong>couleur</strong> est toujours celle de la personne, seule la <strong>forme</strong> change :
                     <ul>
                         <li><strong>Rond gris</strong> : pas encore répondu</li>
                         <li><strong>Rond coloré</strong> : dispo</li>
@@ -1927,8 +1931,12 @@
                     Tu ne peux modifier que ta propre pastille, en cliquant dessus (elle change d'état à chaque clic).`
             },
             {
+                title: "🔄 Synchro avec ton Google Agenda",
+                html: "Toutes les heures, l'appli lit les agendas partagés avec le compte du QG et passe toute seule ta dispo en <strong>indispo</strong> quand tu as un événement sur toute la journée, ou dont le titre contient « bloqué » ou « indispo ». Un événement avec horaire qui commence avant 18h bloque la case <strong>Journée</strong> du week-end. Ce que tu règles toi-même dans l'appli n'est <strong>jamais écrasé</strong> par la synchro."
+            },
+            {
                 title: "🍷 Proposer un événement",
-                html: `Sur la carte d'un jour, le bouton "Proposer un événement" ouvre une pop-up où tu indiques un <strong>motif</strong> (ex : piscine, apéro, resto) et une <strong>heure de début et de fin</strong>. Tu peux proposer <strong>plusieurs événements le même jour</strong> (brunch, apéro, resto...) : chacun a ses propres réponses. L'événement s'affiche sous les pastilles de dispo et sur l'accueil. Le bouton <strong>Modifier</strong> permet de changer le motif et les horaires : si seule l'heure change, les réponses sont conservées ; si le motif change, elles sont remises à zéro. L'invitation agenda se met à jour toute seule.`
+                html: `Sur la carte d'un jour, le bouton "Proposer un événement" ouvre une pop-up où tu indiques un <strong>motif</strong> (ex : piscine, apéro, resto) et une <strong>heure de début et de fin</strong>. Tu peux proposer <strong>plusieurs événements le même jour</strong> (brunch, apéro, resto...) : chacun a ses propres réponses. L'événement s'affiche sous les pastilles de dispo et sur l'accueil. Le bouton <strong>Modifier</strong> permet de changer le motif et les horaires : si seule l'heure change, les réponses sont conservées ; si le motif change, elles sont remises à zéro. <strong>Annuler</strong> supprime l'événement (et l'invitation agenda).`
             },
             {
                 title: "✅ Répondre à une proposition (\"Qui vient ?\")",
@@ -1940,20 +1948,27 @@
                 html: `Dans la pop-up « Proposer un événement », le champ <strong>Sondage</strong> permet de grouper plusieurs options (le même jour ou non) : choisis « Nouveau sondage » pour la première, puis « Ajouter à… » pour les suivantes. Chacune ne peut dire « Oui » qu'à <strong>une seule option</strong> (dire oui à l'une met les autres sur non). Quand les 4 ont voté, l'option qui a strictement le plus de oui (au moins 2) est <strong>confirmée</strong> et les autres sont « non retenues » ; en cas d'égalité, rien n'est confirmé. Le petit ✓ indique le nombre de oui, et ⭐ marque l'option la plus populaire (même hors sondage, entre plusieurs événements du même jour).`
             },
             {
-                title: "📧 Rappel automatique du dimanche",
-                html: "Chaque dimanche vers 16h, celles à qui il manque des dispos pour la semaine suivante (lundi → dimanche) reçoivent un e-mail avec la liste des jours à remplir et le lien de l'appli. Personne n'est relancée si tout est rempli."
+                title: "💬 Prévenir le groupe sur WhatsApp",
+                html: "Quand tu proposes, modifies ou annules un événement, ou quand il devient confirmé, une fenêtre te propose un message WhatsApp déjà rédigé (que tu peux corriger). Tu appuies sur « Ouvrir WhatsApp », tu choisis le groupe et tu envoies. L'envoi n'est pas automatique : WhatsApp ne le permet pas depuis une appli. Un bouton WhatsApp reste aussi disponible sous chaque événement proposé."
             },
             {
                 title: "🔔 Relancer celles qui n'ont pas répondu",
                 html: "Sous un événement proposé, le bouton <strong>Relancer</strong> prépare un message WhatsApp qui nomme celles qui n'ont pas encore répondu. Pour les dispos, un bouton <strong>Relancer</strong> apparaît sur l'accueil (week-end à venir) et dans l'onglet Saisie (14 prochains jours) tant que quelqu'une n'a pas rempli les siennes. Ces boutons n'apparaissent que si quelqu'une d'autre que toi n'a pas répondu."
             },
             {
-                title: "💬 Prévenir le groupe sur WhatsApp",
-                html: "Quand tu proposes, modifies ou annules un événement, ou quand il devient confirmé, une fenêtre te propose un message WhatsApp déjà rédigé (que tu peux corriger). Tu appuies sur « Ouvrir WhatsApp », tu choisis le groupe et tu envoies. L'envoi n'est pas automatique : WhatsApp ne le permet pas depuis une appli. Un bouton WhatsApp reste aussi disponible sous chaque événement proposé."
+                title: "📧 Rappel automatique du dimanche",
+                html: "Chaque dimanche vers 16h, celles à qui il manque des dispos pour la semaine suivante (lundi → dimanche) reçoivent un <strong>e-mail</strong> du « QG des Daronnes » avec la liste des jours à remplir et le lien de l'appli. Personne n'est relancée si tout est rempli."
             },
             {
                 title: "🏠 Onglet Accueil",
-                html: "Affiche tous les événements proposés ou confirmés à venir (avec réponse rapide \"Qui vient ?\" et bouton agenda perso), un aperçu des dispos du week-end à venir, la prochaine date où tout le monde est libre, et de petites statistiques du mois."
+                html: `Affiche tous les événements proposés ou confirmés à venir (avec réponse rapide "Qui vient ?", bouton agenda perso et bouton Modifier), un aperçu des dispos du week-end à venir, la prochaine date où tout le monde est libre, et de <strong>petites stats</strong> :
+                    <ul>
+                        <li>combien de fois vous vous êtes toutes retrouvées ce mois-ci ;</li>
+                        <li>le prochain événement confirmé et dans combien de temps ;</li>
+                        <li>la plus partante (celle qui a dit « Oui » au plus d'événements) ;</li>
+                        <li>le nombre de soirées à venir où au moins 3 d'entre vous sont dispo ;</li>
+                        <li>le pourcentage de dispos remplies pour les 14 prochains jours.</li>
+                    </ul>`
             },
             {
                 title: "📝 Onglet Saisie",
@@ -1965,11 +1980,11 @@
             },
             {
                 title: "🎲 Onglet Idée",
-                html: "Tire une idée de soirée au hasard, ajoute et gère tes propres idées, ou consulte les sorties près de chez vous."
+                html: "Tire une idée de soirée au hasard, ajoute tes propres idées (elles restent pour l'instant <strong>sur ton téléphone</strong>, les autres ne les voient pas), ou consulte les sorties près de chez vous."
             },
             {
                 title: "📅 Ajouter à mon agenda perso",
-                html: "Télécharge un fichier .ics pour un événement proposé/confirmé (avec ses horaires). Une pop-up te laisse d'abord personnaliser le titre et les notes avant le téléchargement."
+                html: "Télécharge un fichier .ics pour un événement proposé/confirmé (avec ses horaires). Une pop-up te laisse d'abord personnaliser le titre et les notes avant le téléchargement. Pour un événement confirmé, tu reçois déjà l'invitation dans ton agenda si tu as dit « Oui »."
             },
             {
                 title: "⚙️ Le menu (en haut à gauche)",
@@ -2235,26 +2250,68 @@
                 if (status.cls === "status-free" || status.cls === "status-free-kids") reunionsCount++;
             });
 
-            const counts = PEOPLE.map(p => ({
-                person: p,
-                count: planningData.filter(item => (item[p.key] || "").includes("Dispo")).length
-            })).sort((a, b) => b.count - a.count);
+            const stats = [];
+            const MS_JOUR = 86400000;
 
-            let mostAvailableText;
-            if (counts.length === 0 || counts[0].count === 0) {
-                mostAvailableText = "Pas encore assez de dispos renseignées pour le savoir.";
-            } else {
-                const topCount = counts[0].count;
-                const tied = counts.filter(c => c.count === topCount).map(c => c.person.display);
-                mostAvailableText = tied.length > 1
-                    ? `${tied.join(" et ")} sont ex æquo, les plus dispo du groupe !`
-                    : `${tied[0]} est la plus dispo du groupe !`;
+            // ⏳ Prochain événement confirmé
+            const prochain = propositionsData
+                .filter(p => {
+                    const d = parseDate(p.date);
+                    return d && d >= today && computePropStatus(p) === "confirmed";
+                })
+                .sort((a, b) => (a.date + a.debut).localeCompare(b.date + b.debut))[0];
+            if (prochain) {
+                const jours = Math.round((parseDate(prochain.date) - today) / MS_JOUR);
+                const quand = jours === 0 ? "aujourd'hui" : jours === 1 ? "demain" : `dans ${jours} jours`;
+                stats.push(`⏳ Prochain événement confirmé ${quand} : <strong>${escapeHtml_(prochain.motif)}</strong>`);
+            }
+
+            // 🙋 La plus partante (nombre de « Oui » aux événements proposés)
+            const oui = PEOPLE.map(p => ({
+                person: p,
+                n: propositionsData.filter(x => (x[p.key] || "").trim() === "Oui").length
+            })).sort((a, b) => b.n - a.n);
+            if (oui[0] && oui[0].n > 0) {
+                const top = oui[0].n;
+                const noms = joinNames_(oui.filter(o => o.n === top).map(o => o.person.display));
+                const plusieurs = oui.filter(o => o.n === top).length > 1;
+                stats.push(`🙋 ${noms} ${plusieurs ? "sont les plus partantes" : "est la plus partante"} : ${top} « Oui » aux événements proposés`);
+            }
+
+            // 🌙 Soirées à venir avec au moins 3 dispos (30 prochains jours)
+            const dans30 = new Date(today.getTime() + 30 * MS_JOUR);
+            const soireesCommunes = planningData.filter(item => {
+                const d = parseDate(item.date);
+                if (!d || d < today || d >= dans30) return false;
+                return PEOPLE.filter(p => (item[p.key] || "").includes("Dispo")).length >= 3;
+            }).length;
+            stats.push(soireesCommunes === 0
+                ? `🌙 Aucune soirée à venir (30 jours) avec 3 dispos ou plus… à vous de remplir !`
+                : `🌙 <strong>${soireesCommunes}</strong> soirée${soireesCommunes > 1 ? "s" : ""} à venir (30 jours) où au moins 3 d'entre vous sont dispo`);
+
+            // 📊 Taux de remplissage des dispos (14 prochains jours)
+            const dans14 = new Date(today.getTime() + 14 * MS_JOUR);
+            let total = 0, remplies = 0;
+            planningData.forEach(item => {
+                const d = parseDate(item.date);
+                if (!d || d < today || d >= dans14) return;
+                PEOPLE.forEach(p => {
+                    total++;
+                    if ((item[p.key] || "").trim() !== "") remplies++;
+                    if (hasJourneeSlot(item)) {
+                        total++;
+                        if ((item[p.key + "Journee"] || "").trim() !== "") remplies++;
+                    }
+                });
+            });
+            if (total > 0) {
+                stats.push(`📊 Dispos remplies pour les 14 prochains jours : <strong>${Math.round(remplies / total * 100)} %</strong>`);
             }
 
             return `
                 <div class="overview-label">PETITES STATS</div>
                 <p style="margin:10px 0 6px;">🎉 Vous vous êtes toutes retrouvées <strong>${reunionsCount}</strong> fois ce mois-ci</p>
-                <p style="margin:0;">🏆 ${mostAvailableText}</p>
+                ${stats.map(t => `<p style="margin:6px 0 0;">${t}</p>`).join("")}
             `;
         }
 

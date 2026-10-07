@@ -2021,6 +2021,22 @@
                 return;
             }
 
+            // « Non merci » / « Arrêter » : la fenêtre se ferme tout de suite, le choix
+            // s'enregistre ensuite en arrière-plan (même si le réseau est capricieux).
+            if (choix === "non") {
+                const premiere = notifMode === "first";
+                closeNotifModal();
+                try {
+                    const resp = await fetch(`${APPS_SCRIPT_URL}?action=saveContact&personne=${encodeURIComponent(person.column)}&choix=non&email=`);
+                    const result = await resp.json();
+                    if (!result.success) throw new Error(result.error || "inconnue");
+                    showToast(premiere ? "D'accord, pas d'e-mail." : "Notifications par e-mail désactivées.");
+                } catch (err) {
+                    showToast("Ton choix n'a pas pu être enregistré, on te le redemandera.", "warn");
+                }
+                return;
+            }
+
             const boutons = [document.getElementById("notif-decline-btn"), document.getElementById("notif-save-btn")];
             boutons.forEach(b => { b.disabled = true; });
             try {

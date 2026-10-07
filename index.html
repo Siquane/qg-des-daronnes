@@ -851,6 +851,8 @@
             text-align: center;
         }
         .confirm-modal.open { display: block; }
+        /* La fenêtre des notifications est plus longue : largeur confortable + défilement si besoin */
+        #notif-modal { width: min(340px, 92vw); max-height: 88vh; overflow-y: auto; }
         .confirm-modal .confirm-title {
             font-family: 'Fraunces', serif;
             font-weight: 600;
@@ -1253,6 +1255,21 @@
         </div>
     </div>
 
+    <!-- Pop-up "Être prévenue par e-mail ?" (première connexion + menu "Mes notifications") -->
+    <div id="notif-overlay" class="confirm-overlay" onclick="closeNotifModal()"></div>
+    <div id="notif-modal" class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="notif-title">
+        <div class="confirm-title" id="notif-title">
+            <span id="notif-title-text">📧 Être prévenue par e-mail ?</span>
+        </div>
+        <p id="notif-info" style="font-size:0.82rem; line-height:1.4; margin:0 0 12px; text-align:left;"></p>
+        <label for="notif-email" class="sr-only">Adresse e-mail</label>
+        <input type="email" id="notif-email" placeholder="ton.adresse@exemple.fr" maxlength="100" autocomplete="email" inputmode="email" onkeydown="if(event.key==='Enter'){event.preventDefault(); saveNotif('oui');}">
+        <div class="confirm-actions">
+            <button id="notif-decline-btn" onclick="saveNotif('non')">Non merci</button>
+            <button class="btn-orange" id="notif-save-btn" onclick="saveNotif('oui')">Enregistrer</button>
+        </div>
+    </div>
+
     <!-- Pop-up "Prévenir le groupe" (message WhatsApp pré-rempli) -->
     <div id="notify-overlay" class="confirm-overlay" onclick="closeNotifyModal()"></div>
     <div id="notify-modal" class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="notify-title">
@@ -1339,6 +1356,13 @@
             </svg>
             <span>Groupe WhatsApp</span>
         </a>
+        <button class="menu-item" onclick="openNotifModalFromMenu()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+            </svg>
+            <span>Mes notifications</span>
+        </button>
         <button class="menu-item" onclick="openFaqModal()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true">
                 <circle cx="12" cy="12" r="9"/>
@@ -1815,7 +1839,8 @@
             renderApp();
 
             try {
-                const resp = await fetch(`${APPS_SCRIPT_URL}?action=deleteProposition&id=${encodeURIComponent(id)}`);
+                const par = currentPerson_();
+                const resp = await fetch(`${APPS_SCRIPT_URL}?action=deleteProposition&id=${encodeURIComponent(id)}&par=${encodeURIComponent(par ? par.column : "")}`);
                 const result = await resp.json();
                 if (!result.success) {
                     propositionsData.push(prop);
@@ -1863,6 +1888,7 @@
             document.getElementById("bottom-nav").style.display = "flex";
             switchTab("accueil");
             loadPlanning();
+            checkNotifPrefs();
         }
 
         function logout() {
@@ -1906,6 +1932,120 @@
         }
 
         // ==========================================================
+        // NOTIFICATIONS PAR E-MAIL (facultatives)
+        // ==========================================================
+        let notifMode = "first"; // "first" (première connexion) | "manage" (menu)
+        let notifCurrentChoix = "";
+        let notifTriggerEl = null;
+
+        function currentPerson_() {
+            return PEOPLE.find(p => p.display === currentUser);
+        }
+
+        async function fetchMyContact_() {
+            const person = currentPerson_();
+            if (!person) return null;
+            const resp = await fetch(`${APPS_SCRIPT_URL}?action=getMyContact&personne=${encodeURIComponent(person.column)}`);
+            const result = await resp.json();
+            return result.success ? result : null;
+        }
+
+        // Première connexion : si aucun choix n'a encore été fait, on propose.
+        async function checkNotifPrefs() {
+            try {
+                const state = await fetchMyContact_();
+                if (state && state.choix === "") openNotifModal("first", state);
+            } catch (err) {
+                // Hors-ligne : on redemandera à la prochaine connexion.
+            }
+        }
+
+        async function openNotifModalFromMenu() {
+            closeMenu();
+            try {
+                const state = await fetchMyContact_();
+                if (!state) throw new Error("indisponible");
+                openNotifModal("manage", state);
+            } catch (err) {
+                showToast("Impossible de charger tes préférences pour le moment.", "error");
+            }
+        }
+
+        function openNotifModal(mode, state) {
+            notifMode = mode;
+            notifCurrentChoix = state.choix;
+            notifTriggerEl = document.activeElement;
+            const liste = `<ul style="margin:6px 0 8px; padding-left:18px;">`
+                + `<li>un e-mail quand un événement auquel tu as répondu « Oui » est <strong>confirmé</strong> ;</li>`
+                + `<li>un e-mail quand cet événement est <strong>annulé</strong> ;</li>`
+                + `<li>une <strong>invitation dans ton agenda</strong> pour chaque événement confirmé auquel tu viens ;</li>`
+                + `<li>chaque dimanche, un <strong>rappel</strong> si tu n'as pas rempli tes dispos de la semaine suivante.</li>`
+                + `</ul>`;
+            const sync = `<div style="margin-top:6px;">Si c'est une adresse Google et que tu partages ton agenda avec <strong>siquane.lab@gmail.com</strong>, tes indispos d'agenda se synchronisent aussi.</div>`;
+            let info, decline;
+            if (mode === "first") {
+                info = `Tu recevras automatiquement :${liste}C'est facultatif : sans adresse, tu n'es pas prévenue par e-mail.${sync}`;
+                decline = "Non merci";
+            } else if (state.choix === "oui") {
+                info = `Tu es prévenue sur <strong>${escapeHtml_(state.masked)}</strong>. Saisis une autre adresse pour la changer, ou arrête les notifications.<br>Tu reçois :${liste}${sync}`;
+                decline = "Arrêter";
+            } else {
+                info = `Tu n'es pas prévenue par e-mail pour l'instant. Avec une adresse, tu recevrais :${liste}${sync}`;
+                decline = "Fermer";
+            }
+            document.getElementById("notif-title-text").textContent = mode === "first" ? "📧 Être prévenue par e-mail ?" : "🔔 Mes notifications";
+            document.getElementById("notif-info").innerHTML = info;
+            document.getElementById("notif-email").value = "";
+            document.getElementById("notif-decline-btn").textContent = decline;
+            document.getElementById("notif-overlay").classList.add("open");
+            document.getElementById("notif-modal").classList.add("open");
+        }
+
+        function closeNotifModal() {
+            document.getElementById("notif-overlay").classList.remove("open");
+            document.getElementById("notif-modal").classList.remove("open");
+            const elToFocus = notifTriggerEl;
+            notifTriggerEl = null;
+            if (elToFocus) setTimeout(() => elToFocus.focus(), 0);
+        }
+
+        async function saveNotif(choix) {
+            const person = currentPerson_();
+            if (!person) return;
+            const email = document.getElementById("notif-email").value.trim();
+
+            if (choix === "oui" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showToast("Adresse e-mail invalide.", "warn");
+                return;
+            }
+            // Menu, pas encore prévenue : « Fermer » ne change rien.
+            if (choix === "non" && notifMode === "manage" && notifCurrentChoix !== "oui") {
+                closeNotifModal();
+                return;
+            }
+
+            const boutons = [document.getElementById("notif-decline-btn"), document.getElementById("notif-save-btn")];
+            boutons.forEach(b => { b.disabled = true; });
+            try {
+                const url = `${APPS_SCRIPT_URL}?action=saveContact`
+                    + `&personne=${encodeURIComponent(person.column)}`
+                    + `&choix=${choix}`
+                    + `&email=${encodeURIComponent(email)}`;
+                const resp = await fetch(url);
+                const result = await resp.json();
+                if (!result.success) throw new Error(result.error || "inconnue");
+                closeNotifModal();
+                showToast(choix === "oui"
+                    ? "C'est noté ! Un e-mail de confirmation t'a été envoyé."
+                    : "Notifications par e-mail désactivées.");
+            } catch (err) {
+                showToast("Enregistrement impossible : " + (err.message || "réessaie plus tard."), "error");
+            } finally {
+                boutons.forEach(b => { b.disabled = false; });
+            }
+        }
+
+        // ==========================================================
         // POP-UP FAQ / COMMENT ÇA MARCHE
         // ==========================================================
         let faqTriggerEl = null;
@@ -1932,7 +2072,7 @@
             },
             {
                 title: "🔄 Synchro avec ton Google Agenda",
-                html: "Toutes les heures, l'appli lit les agendas partagés avec le compte du QG et passe toute seule ta dispo en <strong>indispo</strong> quand tu as un événement sur toute la journée, ou dont le titre contient « bloqué » ou « indispo ». Un événement avec horaire qui commence avant 18h bloque la case <strong>Journée</strong> du week-end. Ce que tu règles toi-même dans l'appli n'est <strong>jamais écrasé</strong> par la synchro."
+                html: "Si tu as donné une <strong>adresse Google</strong> (menu → Mes notifications) et partagé ton agenda avec le compte du QG (siquane.lab@gmail.com), l'appli le lit toutes les heures et passe toute seule ta dispo en <strong>indispo</strong> quand tu as un événement sur toute la journée, ou dont le titre contient « bloqué » ou « indispo ». Un événement avec horaire qui commence avant 18h bloque la case <strong>Journée</strong> du week-end. Ce que tu règles toi-même dans l'appli n'est <strong>jamais écrasé</strong> par la synchro."
             },
             {
                 title: "🍷 Proposer un événement",
@@ -1952,12 +2092,16 @@
                 html: "Quand tu proposes, modifies ou annules un événement, ou quand il devient confirmé, une fenêtre te propose un message WhatsApp déjà rédigé (que tu peux corriger). Tu appuies sur « Ouvrir WhatsApp », tu choisis le groupe et tu envoies. L'envoi n'est pas automatique : WhatsApp ne le permet pas depuis une appli. Un bouton WhatsApp reste aussi disponible sous chaque événement proposé."
             },
             {
+                title: "📧 Notifications par e-mail (facultatives)",
+                html: "À ta première connexion, l'appli te demande si tu veux être prévenue par e-mail. Tu peux donner n'importe quelle adresse (Gmail ou non) ou répondre « Non merci » : sans adresse, tu n'es pas prévenue. Avec une adresse, tu reçois : un e-mail quand un événement auquel tu as répondu « Oui » est <strong>confirmé</strong>, un e-mail quand il est <strong>annulé</strong>, une <strong>invitation d'agenda</strong> pour chaque événement confirmé auquel tu viens, et chaque dimanche un <strong>rappel</strong> si tu n'as pas rempli tes dispos de la semaine suivante. Tu peux changer d'adresse ou arrêter à tout moment : menu → <strong>Mes notifications</strong>. L'adresse n'est jamais affichée aux autres."
+            },
+            {
                 title: "🔔 Relancer celles qui n'ont pas répondu",
                 html: "Sous un événement proposé, le bouton <strong>Relancer</strong> prépare un message WhatsApp qui nomme celles qui n'ont pas encore répondu. Pour les dispos, un bouton <strong>Relancer</strong> apparaît sur l'accueil (week-end à venir) et dans l'onglet Saisie (14 prochains jours) tant que quelqu'une n'a pas rempli les siennes. Ces boutons n'apparaissent que si quelqu'une d'autre que toi n'a pas répondu."
             },
             {
                 title: "📧 Rappel automatique du dimanche",
-                html: "Chaque dimanche vers 16h, celles à qui il manque des dispos pour la semaine suivante (lundi → dimanche) reçoivent un <strong>e-mail</strong> du « QG des Daronnes » avec la liste des jours à remplir et le lien de l'appli. Personne n'est relancée si tout est rempli."
+                html: "Chaque dimanche vers 16h, celles qui ont donné leur adresse et à qui il manque des dispos pour la semaine suivante (lundi → dimanche) reçoivent un <strong>e-mail</strong> du « QG des Daronnes » avec la liste des jours à remplir et le lien de l'appli. Personne n'est relancée si tout est rempli."
             },
             {
                 title: "🏠 Onglet Accueil",

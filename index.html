@@ -1976,21 +1976,18 @@
             notifCurrentChoix = state.choix;
             notifTriggerEl = document.activeElement;
             const liste = `<ul style="margin:6px 0 8px; padding-left:18px;">`
-                + `<li>un e-mail quand un événement auquel tu as répondu « Oui » est <strong>confirmé</strong> ;</li>`
-                + `<li>un e-mail quand cet événement est <strong>annulé</strong> ;</li>`
-                + `<li>une <strong>invitation dans ton agenda</strong> pour chaque événement confirmé auquel tu viens ;</li>`
-                + `<li>chaque dimanche, un <strong>rappel</strong> si tu n'as pas rempli tes dispos de la semaine suivante.</li>`
+                + `<li>quand un événement auquel tu viens est <strong>confirmé</strong> ou <strong>annulé</strong> (avec une invitation dans ton agenda) ;</li>`
+                + `<li>chaque dimanche, si tes dispos de la semaine suivante ne sont pas remplies.</li>`
                 + `</ul>`;
-            const sync = `<div style="margin-top:6px;">Si c'est une adresse Google et que tu partages ton agenda avec <strong>siquane.lab@gmail.com</strong>, tes indispos d'agenda se synchronisent aussi.</div>`;
             let info, decline;
             if (mode === "first") {
-                info = `Tu recevras automatiquement :${liste}C'est facultatif : sans adresse, tu n'es pas prévenue par e-mail.${sync}`;
+                info = `Tu recevras un e-mail :${liste}Facultatif : sans adresse, pas d'e-mail.`;
                 decline = "Non merci";
             } else if (state.choix === "oui") {
-                info = `Tu es prévenue sur <strong>${escapeHtml_(state.masked)}</strong>. Saisis une autre adresse pour la changer, ou arrête les notifications.<br>Tu reçois :${liste}${sync}`;
+                info = `Tu es prévenue sur <strong>${escapeHtml_(state.masked)}</strong>. Saisis une autre adresse pour la changer, ou arrête les notifications.`;
                 decline = "Arrêter";
             } else {
-                info = `Tu n'es pas prévenue par e-mail pour l'instant. Avec une adresse, tu recevrais :${liste}${sync}`;
+                info = `Tu n'es pas prévenue par e-mail. Avec une adresse, tu recevrais un e-mail :${liste}`;
                 decline = "Fermer";
             }
             document.getElementById("notif-title-text").textContent = mode === "first" ? "📧 Être prévenue par e-mail ?" : "🔔 Mes notifications";
@@ -2247,8 +2244,8 @@
                                 <path d="M230,150 C230,166 235,175 242,182 C249,175 254,166 254,150 Z"/>
                             </clipPath>
                             <g class="bottle-group">
-                                <path d="M125,190 L125,135 C125,118 133,107 140,101 L140,70 L154,70 L154,101 C161,107 169,118 169,135 L169,188 C169,192 166,195 162,195 L130,195 C126,195 125,193 125,190 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-                                <rect x="137" y="59" width="20" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                <path d="M125,190 L125,135 C125,118 133,107 140,101 L140,70 L154,70 L154,101 C161,107 169,118 169,135 L169,188 C169,192 166,195 162,195 L130,195 C126,195 125,193 125,190 Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+                                <rect x="137" y="59" width="20" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="5"/>
                             </g>
                             <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
                             <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
@@ -2259,9 +2256,9 @@
                             <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
                             <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
                             <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
-                            <path d="M230,150 C230,166 235,175 242,182 C249,175 254,166 254,150" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-                            <line x1="242" y1="182" x2="242" y2="205" stroke="currentColor" stroke-width="2.5"/>
-                            <ellipse cx="242" cy="208" rx="11" ry="2.8" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                            <path d="M230,150 C230,166 235,175 242,182 C249,175 254,166 254,150" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+                            <line x1="242" y1="182" x2="242" y2="205" stroke="currentColor" stroke-width="5"/>
+                            <ellipse cx="242" cy="208" rx="11" ry="2.8" fill="none" stroke="currentColor" stroke-width="5"/>
                             <rect class="liquid-fill" x="230" width="24" fill="var(--primary)" clip-path="url(#pourGlassClip)"/>
                         </svg>
                         <div class="loading-text">Chargement du planning...</div>

@@ -258,6 +258,7 @@
         }
         .menu-header .avatar-icon { width: 36px; height: 36px; margin: 0; }
         .menu-header span { font-weight: bold; }
+        .menu-item[hidden] { display: none !important; }
         .menu-item {
             display: flex;
             align-items: center;
@@ -1363,6 +1364,14 @@
             </svg>
             <span>Mes notifications</span>
         </button>
+        <button class="menu-item" id="menu-push-btn" onclick="togglePush()" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true">
+                <path d="M12 3v2"/>
+                <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/>
+                <path d="M10 21h4"/>
+            </svg>
+            <span id="menu-push-label">Activer l'alerte de soirée</span>
+        </button>
         <button class="menu-item" onclick="openFaqModal()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true">
                 <circle cx="12" cy="12" r="9"/>
@@ -1463,6 +1472,11 @@
         // 🔗 A REMPLACER : URL publique de l'appli (ex: ton lien Netlify), utilisée
         // dans les messages WhatsApp envoyés pour prévenir le groupe.
         const APP_URL = "https://qg-des-daronnes.netlify.app";
+
+        // 🔔 Alerte de soirée (notification 2 h avant). À remplir avec les valeurs du projet
+        // Firebase (voir le guide). Tant que c'est vide, le bouton reste caché dans le menu.
+        const FIREBASE_WEB_CONFIG = { apiKey: "", projectId: "", messagingSenderId: "", appId: "" };
+        const FCM_VAPID_KEY = "";
         // (protection simple entre vous, pas une vraie sécurité)
         const PEOPLE = [
             { display: "Anaïs",        short: "Anaïs",    key: "anais",       column: "Anais",       columnJournee: "Anais_Journee",       columnParticipe: "Anais_Participe",       columnParticipeJournee: "Anais_ParticipeJournee",       pin: "1111", color: "#26de81" },
@@ -1889,6 +1903,7 @@
             switchTab("accueil");
             loadPlanning();
             checkNotifPrefs();
+            updatePushMenu_();
         }
 
         function logout() {
@@ -2059,6 +2074,97 @@
         }
 
         // ==========================================================
+        // ALERTE DE SOIRÉE (notification push, 2 h avant)
+        // ==========================================================
+        function pushConfigured_() {
+            return !!(FCM_VAPID_KEY && FIREBASE_WEB_CONFIG.apiKey && FIREBASE_WEB_CONFIG.projectId
+                && FIREBASE_WEB_CONFIG.messagingSenderId && FIREBASE_WEB_CONFIG.appId);
+        }
+
+        function pushKey_() {
+            const person = currentPerson_();
+            return "qgd_push_token_" + (person ? person.column : "");
+        }
+
+        function storedPushToken_() {
+            try { return localStorage.getItem(pushKey_()) || ""; } catch (e) { return ""; }
+        }
+
+        function updatePushMenu_() {
+            const btn = document.getElementById("menu-push-btn");
+            if (!btn) return;
+            btn.hidden = !pushConfigured_();
+            const on = !!storedPushToken_() && ("Notification" in window) && Notification.permission === "granted";
+            document.getElementById("menu-push-label").textContent = on
+                ? "Alerte de soirée activée (désactiver)"
+                : "Activer l'alerte de soirée";
+        }
+
+        function loadScript_(src) {
+            return new Promise((resolve, reject) => {
+                if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+                const s = document.createElement("script");
+                s.src = src;
+                s.onload = () => resolve();
+                s.onerror = () => reject(new Error("chargement impossible"));
+                document.head.appendChild(s);
+            });
+        }
+
+        async function getPushToken_(reg) {
+            await loadScript_("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
+            await loadScript_("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
+            if (!firebase.apps.length) firebase.initializeApp(FIREBASE_WEB_CONFIG);
+            return firebase.messaging().getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+        }
+
+        async function togglePush() {
+            closeMenu();
+            const person = currentPerson_();
+            if (!person || !pushConfigured_()) return;
+
+            // Déjà activée : on désactive.
+            const existing = storedPushToken_();
+            if (existing) {
+                try {
+                    await fetch(`${APPS_SCRIPT_URL}?action=removePush&personne=${encodeURIComponent(person.column)}&token=${encodeURIComponent(existing)}`);
+                } catch (e) { /* hors-ligne : le serveur nettoiera un jour le jeton périmé */ }
+                try { localStorage.removeItem(pushKey_()); } catch (e) { /* tant pis */ }
+                updatePushMenu_();
+                showToast("Alerte de soirée désactivée sur ce téléphone.");
+                return;
+            }
+
+            if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+                showToast("Sur iPhone : ajoute d'abord l'appli à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis ouvre-la depuis là.", "warn");
+                return;
+            }
+            try {
+                const perm = await Notification.requestPermission();
+                if (perm !== "granted") {
+                    showToast("Notifications refusées : autorise-les dans les réglages du téléphone pour cette appli.", "warn");
+                    return;
+                }
+                const reg = await navigator.serviceWorker.ready;
+                const token = await getPushToken_(reg);
+                if (!token) throw new Error("jeton indisponible");
+                const resp = await fetch(`${APPS_SCRIPT_URL}?action=savePush&personne=${encodeURIComponent(person.column)}&token=${encodeURIComponent(token)}`);
+                const result = await resp.json();
+                if (!result.success) throw new Error(result.error || "inconnue");
+                try { localStorage.setItem(pushKey_(), token); } catch (e) { /* tant pis */ }
+                updatePushMenu_();
+                showToast("Alerte activée ! Tu seras prévenue 2 h avant chaque soirée confirmée.");
+                // Notification d'essai : prouve tout de suite que ça marche sur ce téléphone.
+                reg.showNotification("🍷 Alerte activée", {
+                    body: "Tu recevras un rappel 2 h avant chaque soirée confirmée.",
+                    icon: "logo-qgd-192.png"
+                });
+            } catch (err) {
+                showToast("Activation impossible : " + (err.message || "réessaie plus tard."), "error");
+            }
+        }
+
+        // ==========================================================
         // POP-UP FAQ / COMMENT ÇA MARCHE
         // ==========================================================
         let faqTriggerEl = null;
@@ -2117,6 +2223,10 @@
                 html: "Chaque dimanche vers 16h, celles qui ont donné leur adresse et à qui il manque des dispos pour la semaine suivante (lundi → dimanche) reçoivent un <strong>e-mail</strong> du « QG des Daronnes » avec la liste des jours à remplir et le lien de l'appli. Personne n'est relancée si tout est rempli."
             },
             {
+                title: "⏰ Alerte de soirée (2 h avant)",
+                html: "Quand le bouton <strong>Activer l'alerte de soirée</strong> apparaît dans le menu, appuie dessus et accepte les notifications : tu recevras une <strong>notification sur ce téléphone 2 h avant</strong> chaque événement confirmé auquel tu as répondu « Oui ». À activer une fois par téléphone (et par personne). Sur <strong>iPhone</strong>, ajoute d'abord l'appli à l'écran d'accueil (Partager → Sur l'écran d'accueil) et ouvre-la depuis là. Si tu n'as pas activé l'alerte mais que tu as donné une adresse e-mail, le même rappel t'arrive par e-mail. Pour l'arrêter : menu → même bouton."
+            },
+            {
                 title: "🏠 Onglet Accueil",
                 html: `Affiche tous les événements proposés ou confirmés à venir (avec réponse rapide "Qui vient ?", bouton agenda perso et bouton Modifier), un aperçu des dispos du week-end à venir, la prochaine date où tout le monde est libre, et de <strong>petites stats</strong> :
                     <ul>
@@ -2137,7 +2247,7 @@
             },
             {
                 title: "🎲 Onglet Idée",
-                html: "Tire une idée de soirée au hasard, ajoute tes propres idées (elles restent pour l'instant <strong>sur ton téléphone</strong>, les autres ne les voient pas), ou consulte les sorties près de chez vous."
+                html: "Tire une idée de soirée au hasard, ajoute tes propres idées (<strong>partagées avec les trois autres</strong> : vous pouvez voter 👍 pour vos préférées, et seule l'auteure peut modifier ou supprimer la sienne), ou consulte les sorties près de chez vous."
             },
             {
                 title: "📅 Ajouter à mon agenda perso",
@@ -2260,8 +2370,8 @@
                                 <path d="M230,150 C230,166 235,175 242,182 C249,175 254,166 254,150 Z"/>
                             </clipPath>
                             <g class="bottle-group">
-                                <path d="M125,190 L125,135 C125,118 133,107 140,101 L140,70 L154,70 L154,101 C161,107 169,118 169,135 L169,188 C169,192 166,195 162,195 L130,195 C126,195 125,193 125,190 Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
-                                <rect x="137" y="59" width="20" height="10" rx="4" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+                                <path d="M125,190 L125,135 C125,118 133,107 140,101 L140,70 L154,70 L154,101 C161,107 169,118 169,135 L169,188 C169,192 166,195 162,195 L130,195 C126,195 125,193 125,190 Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+                                <rect x="137" y="59" width="20" height="10" rx="4" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
                             </g>
                             <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
                             <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
@@ -2273,9 +2383,9 @@
                             <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
                             <circle class="droplet" cx="232" cy="105" r="2.5" fill="var(--primary)"/>
                             <rect class="liquid-fill" x="230" width="24" fill="var(--primary)" clip-path="url(#pourGlassClip)"/>
-                            <path d="M230,150 C230,166 235,175 242,182 C249,175 254,166 254,150" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
-                            <line x1="242" y1="182" x2="242" y2="205" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
-                            <ellipse cx="242" cy="208" rx="11" ry="2.8" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+                            <path d="M230,150 C230,166 235,175 242,182 C249,175 254,166 254,150" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+                            <line x1="242" y1="182" x2="242" y2="205" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+                            <ellipse cx="242" cy="208" rx="11" ry="2.8" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
                         </svg>
                         <div class="loading-text">Chargement du planning...</div>
                     </div>
@@ -2858,28 +2968,66 @@
             "Soirée déguisée 🎭",
             "Pique-nique au parc 🧺"
         ];
+        // Anciennes idées, stockées sur le téléphone : elles sont envoyées une fois dans le Sheet.
         const CUSTOM_IDEAS_KEY = "qgd_custom_ideas_v1";
         let lastIdeaDrawn = null;
+        let sharedIdeas = [];        // idées partagées : { id, auteure, texte, date, votes: [...] }
+        let ideasLoading = false;
+        let ideasError = false;
+        let editingIdeaId = null;
 
-        function getCustomIdeas() {
+        function getLocalIdeas_() {
             try {
                 const raw = localStorage.getItem(CUSTOM_IDEAS_KEY);
-                return raw ? JSON.parse(raw) : [];
+                const list = raw ? JSON.parse(raw) : [];
+                return Array.isArray(list) ? list.filter(t => typeof t === "string" && t.trim()) : [];
             } catch (e) {
                 return [];
             }
         }
 
-        function saveCustomIdeas(list) {
-            try {
-                localStorage.setItem(CUSTOM_IDEAS_KEY, JSON.stringify(list));
-            } catch (e) {
-                // Stockage indisponible : tant pis, la liste ne persistera pas.
-            }
+        function clearLocalIdeas_() {
+            try { localStorage.removeItem(CUSTOM_IDEAS_KEY); } catch (e) { /* tant pis */ }
         }
 
         function getAllIdeas() {
-            return IDEAS.concat(getCustomIdeas());
+            return IDEAS.concat(sharedIdeas.map(i => i.texte));
+        }
+
+        // Appel au Sheet : chaque action renvoie la liste à jour des idées.
+        async function ideasCall_(params) {
+            const resp = await fetch(`${APPS_SCRIPT_URL}?${params}`);
+            const result = await resp.json();
+            if (!result.success) throw new Error(result.error || "inconnue");
+            sharedIdeas = result.idees || [];
+            ideasError = false;
+        }
+
+        async function loadSharedIdeas_() {
+            if (ideasLoading) return;
+            ideasLoading = true;
+            try {
+                await ideasCall_("action=getIdees");
+                // Migration : on envoie une seule fois les idées gardées sur ce téléphone.
+                const person = currentPerson_();
+                const locales = getLocalIdeas_();
+                if (person && locales.length) {
+                    clearLocalIdeas_();
+                    try {
+                        for (const t of locales) {
+                            await ideasCall_(`action=addIdee&personne=${encodeURIComponent(person.column)}&texte=${encodeURIComponent(t)}`);
+                        }
+                        showToast("Tes idées sont maintenant partagées avec les copines !");
+                    } catch (err) {
+                        showToast("Certaines de tes anciennes idées n'ont pas pu être partagées.", "warn");
+                    }
+                }
+            } catch (err) {
+                ideasError = true;
+            } finally {
+                ideasLoading = false;
+                renderCustomIdeasList();
+            }
         }
 
         function renderIdee(container) {
@@ -2898,6 +3046,7 @@
             addCard.className = "card";
             addCard.innerHTML = `
                 <div class="overview-label" style="text-align:center;">VOS IDÉES</div>
+                <p style="font-size:0.78rem; opacity:0.7; text-align:center; margin:4px 0 0;">Partagées entre vous quatre : 👍 pour voter, les plus aimées remontent.</p>
                 <label for="new-idea-input" class="sr-only">Ajouter une idée de soirée</label>
                 <div style="display:flex; gap:8px; margin-top:10px;">
                     <input type="text" id="new-idea-input" class="search-input" style="margin-bottom:0;" placeholder="Ex: Soirée pâtisserie 🧁" maxlength="60">
@@ -2906,6 +3055,7 @@
                 <div id="custom-ideas-list" style="margin-top:12px;"></div>
             `;
             container.appendChild(addCard);
+            loadSharedIdeas_();
             renderCustomIdeasList();
 
             addCard.querySelector("#add-idea-btn").onclick = addCustomIdea;
@@ -2935,36 +3085,120 @@
         function renderCustomIdeasList() {
             const listEl = document.getElementById("custom-ideas-list");
             if (!listEl) return;
-            const customIdeas = getCustomIdeas();
-            if (customIdeas.length === 0) {
-                listEl.innerHTML = `<p style="font-size:0.8rem; opacity:0.6; margin:0;">Aucune idée ajoutée pour l'instant.</p>`;
+            const person = currentPerson_();
+            const moi = person ? person.column : "";
+
+            if (ideasLoading && sharedIdeas.length === 0) {
+                listEl.innerHTML = `<p style="font-size:0.8rem; opacity:0.6; margin:0;">Chargement des idées…</p>`;
                 return;
             }
-            listEl.innerHTML = customIdeas.map((idea, i) => `
+            if (ideasError && sharedIdeas.length === 0) {
+                listEl.innerHTML = `<p style="font-size:0.8rem; opacity:0.75; margin:0;">Impossible de charger les idées pour le moment. <button class="btn-subtle" onclick="loadSharedIdeas_()">Réessayer</button></p>`;
+                return;
+            }
+            if (sharedIdeas.length === 0) {
+                listEl.innerHTML = `<p style="font-size:0.8rem; opacity:0.6; margin:0;">Aucune idée ajoutée pour l'instant. Lance-toi !</p>`;
+                return;
+            }
+            listEl.innerHTML = sharedIdeas.map(idea => {
+                const mine = idea.auteure === moi;
+                const aVote = idea.votes.indexOf(moi) !== -1;
+                const nom = PEOPLE.find(p => p.column === idea.auteure);
+                const par = nom ? nom.display : "";
+                const voteBtn = `<button onclick="voteIdea_('${idea.id}')" aria-pressed="${aVote}" aria-label="${aVote ? "Retirer mon vote" : "Voter pour cette idée"}" style="padding:4px 10px; flex-shrink:0; ${aVote ? "border-color:var(--primary); color:var(--primary); font-weight:700;" : ""}">👍 ${idea.votes.length}</button>`;
+                if (editingIdeaId === idea.id) {
+                    return `
+                    <div style="display:flex; align-items:center; gap:6px; padding:8px 0; border-bottom:1px solid var(--border);">
+                        <input type="text" id="edit-idea-input" class="search-input" style="margin-bottom:0;" value="${escapeHtml_(idea.texte)}" maxlength="60" onkeydown="if(event.key==='Enter'){saveIdeaEdit_('${idea.id}');}else if(event.key==='Escape'){cancelIdeaEdit_();}">
+                        <button onclick="saveIdeaEdit_('${idea.id}')" style="padding:4px 10px;" aria-label="Enregistrer">✓</button>
+                        <button onclick="cancelIdeaEdit_()" style="padding:4px 10px;" aria-label="Annuler">✕</button>
+                    </div>`;
+                }
+                return `
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid var(--border);">
-                    <span style="font-size:0.9rem;">${idea}</span>
-                    <button onclick="removeCustomIdea(${i})" aria-label="Retirer cette idée" style="padding:4px 10px;">✕</button>
-                </div>
-            `).join("");
+                    <div style="min-width:0; text-align:left;">
+                        <div style="font-size:0.9rem; overflow-wrap:anywhere;">${escapeHtml_(idea.texte)}</div>
+                        ${par ? `<div style="font-size:0.72rem; opacity:0.6;">${escapeHtml_(par)}</div>` : ""}
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                        ${voteBtn}
+                        ${mine ? `<button onclick="startIdeaEdit_('${idea.id}')" aria-label="Modifier mon idée" style="padding:4px 10px;">✏️</button>
+                        <button onclick="deleteIdea_('${idea.id}')" aria-label="Supprimer mon idée" style="padding:4px 10px;">✕</button>` : ""}
+                    </div>
+                </div>`;
+            }).join("");
+            if (editingIdeaId) {
+                const inp = document.getElementById("edit-idea-input");
+                if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+            }
         }
 
-        function addCustomIdea() {
+        async function addCustomIdea() {
+            const person = currentPerson_();
             const input = document.getElementById("new-idea-input");
             const value = input.value.trim();
-            if (!value) return;
-            const customIdeas = getCustomIdeas();
-            customIdeas.push(value);
-            saveCustomIdeas(customIdeas);
-            input.value = "";
-            renderCustomIdeasList();
-            showToast("Idée ajoutée !");
+            if (!value || !person) return;
+            const btn = document.getElementById("add-idea-btn");
+            btn.disabled = true;
+            try {
+                await ideasCall_(`action=addIdee&personne=${encodeURIComponent(person.column)}&texte=${encodeURIComponent(value)}`);
+                input.value = "";
+                renderCustomIdeasList();
+                showToast("Idée ajoutée, les copines la voient !");
+            } catch (err) {
+                showToast("Idée non enregistrée : " + (err.message || "réessaie plus tard."), "error");
+            } finally {
+                btn.disabled = false;
+            }
         }
 
-        function removeCustomIdea(index) {
-            const customIdeas = getCustomIdeas();
-            customIdeas.splice(index, 1);
-            saveCustomIdeas(customIdeas);
+        async function voteIdea_(id) {
+            const person = currentPerson_();
+            if (!person) return;
+            try {
+                await ideasCall_(`action=voteIdee&id=${encodeURIComponent(id)}&personne=${encodeURIComponent(person.column)}`);
+                renderCustomIdeasList();
+            } catch (err) {
+                showToast("Vote non enregistré : " + (err.message || "réessaie plus tard."), "error");
+            }
+        }
+
+        function startIdeaEdit_(id) {
+            editingIdeaId = id;
             renderCustomIdeasList();
+        }
+
+        function cancelIdeaEdit_() {
+            editingIdeaId = null;
+            renderCustomIdeasList();
+        }
+
+        async function saveIdeaEdit_(id) {
+            const person = currentPerson_();
+            const inp = document.getElementById("edit-idea-input");
+            if (!person || !inp) return;
+            const texte = inp.value.trim();
+            if (!texte) return;
+            try {
+                await ideasCall_(`action=updateIdee&id=${encodeURIComponent(id)}&personne=${encodeURIComponent(person.column)}&texte=${encodeURIComponent(texte)}`);
+                editingIdeaId = null;
+                renderCustomIdeasList();
+                showToast("Idée modifiée.");
+            } catch (err) {
+                showToast("Modification impossible : " + (err.message || "réessaie plus tard."), "error");
+            }
+        }
+
+        async function deleteIdea_(id) {
+            const person = currentPerson_();
+            if (!person) return;
+            if (!window.confirm("Supprimer cette idée pour tout le monde ?")) return;
+            try {
+                await ideasCall_(`action=deleteIdee&id=${encodeURIComponent(id)}&personne=${encodeURIComponent(person.column)}`);
+                renderCustomIdeasList();
+            } catch (err) {
+                showToast("Suppression impossible : " + (err.message || "réessaie plus tard."), "error");
+            }
         }
 
         function tirerIdee() {

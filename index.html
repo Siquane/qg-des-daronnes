@@ -1294,6 +1294,16 @@
         </div>
         <label for="ics-title-input" class="sr-only">Titre de l'événement</label>
         <input type="text" id="ics-title-input" placeholder="Titre de l'événement" maxlength="100" autocomplete="off">
+        <div class="time-row">
+            <div class="time-field">
+                <label for="ics-start">Début</label>
+                <input type="time" id="ics-start" value="20:00">
+            </div>
+            <div class="time-field">
+                <label for="ics-end">Fin</label>
+                <input type="time" id="ics-end" value="23:00">
+            </div>
+        </div>
         <label for="ics-notes-input" class="sr-only">Notes</label>
         <input type="text" id="ics-notes-input" placeholder="Notes (optionnel)" maxlength="200" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitIcsDownload();}">
         <div class="confirm-actions">
@@ -2918,6 +2928,8 @@
             icsTriggerEl = document.activeElement;
             document.getElementById("ics-title-input").value = titre;
             document.getElementById("ics-notes-input").value = notes;
+            document.getElementById("ics-start").value = debut;
+            document.getElementById("ics-end").value = fin;
             document.getElementById("ics-overlay").classList.add("open");
             document.getElementById("ics-modal").classList.add("open");
             setTimeout(() => document.getElementById("ics-title-input").focus(), 50);
@@ -2951,7 +2963,10 @@
             if (!pendingIcs) return;
             const titre = document.getElementById("ics-title-input").value;
             const notes = document.getElementById("ics-notes-input").value;
-            const { isoDateStr, debut, fin } = pendingIcs;
+            const { isoDateStr } = pendingIcs;
+            // Horaires modifiables dans la pop-up ; si un champ est vidé, on garde l'horaire d'origine.
+            const debut = document.getElementById("ics-start").value || pendingIcs.debut;
+            const fin = document.getElementById("ics-end").value || pendingIcs.fin;
             closeIcsModal();
             downloadEventICS(isoDateStr, debut, fin, titre, notes);
         }

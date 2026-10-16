@@ -426,7 +426,7 @@
             transform: scale(0.9);
         }
         .round-btn:disabled {
-            opacity: 0.5;
+            opacity: 1; /* pastilles des autres : en couleur, juste non cliquables */
             cursor: not-allowed;
             pointer-events: none;
         }
@@ -1045,6 +1045,9 @@
         .time-field { flex: 1; text-align: left; }
         .time-field label { display: block; font-size: 0.75rem; font-weight: 600; opacity: 0.7; margin-bottom: 4px; }
         .time-field input { margin-bottom: 0 !important; }
+        .time-sel { display: flex; align-items: center; gap: 6px; }
+        .time-sel select { flex: 1; min-width: 0; padding: 12px 8px; font-size: 1rem; text-align: center; margin: 0; }
+        .time-sel span { font-weight: 700; }
 
         .poll-field { text-align: left; margin-bottom: 12px; }
         .poll-field label { display: block; font-size: 0.75rem; font-weight: 600; opacity: 0.7; margin-bottom: 4px; }
@@ -1204,7 +1207,7 @@
         }
     </style>
 </head>
-<body data-theme="light">
+<body data-theme="dark">
 
     <div id="login-screen">
         <h1 style="font-size: 1.5rem; white-space: nowrap;">Le QG des Daronnes</h1>
@@ -1240,11 +1243,11 @@
         <div class="time-row">
             <div class="time-field">
                 <label for="confirm-start">Début</label>
-                <input type="time" id="confirm-start" value="20:00">
+                <input type="hidden" id="confirm-start" value="20:00" data-timesel="1">
             </div>
             <div class="time-field">
                 <label for="confirm-end">Fin</label>
-                <input type="time" id="confirm-end" value="23:00">
+                <input type="hidden" id="confirm-end" value="23:00" data-timesel="1">
             </div>
         </div>
         <div class="poll-field" id="confirm-poll-wrap">
@@ -1298,11 +1301,11 @@
         <div class="time-row">
             <div class="time-field">
                 <label for="ics-start">Début</label>
-                <input type="time" id="ics-start" value="20:00">
+                <input type="hidden" id="ics-start" value="20:00" data-timesel="1">
             </div>
             <div class="time-field">
                 <label for="ics-end">Fin</label>
-                <input type="time" id="ics-end" value="23:00">
+                <input type="hidden" id="ics-end" value="23:00" data-timesel="1">
             </div>
         </div>
         <label for="ics-notes-input" class="sr-only">Notes</label>
@@ -1325,7 +1328,7 @@
             <h1 class="top-bar-title">
                 <span class="top-bar-title-text">Le QG des Daronnes</span>
             </h1>
-            <button id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Passer en mode sombre">
+            <button id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Passer en mode clair">
                 <span class="theme-icon">
                     <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="4"/>
@@ -1459,6 +1462,47 @@
     </nav>
 
     <script>
+        // Sélecteur d'heure simple (2 listes) : le sélecteur natif d'Android déborde de l'écran.
+        (function () {
+            document.querySelectorAll('input[data-timesel]').forEach(function (inp) {
+                const wrap = document.createElement("div");
+                wrap.className = "time-sel";
+                const hs = document.createElement("select");
+                const ms = document.createElement("select");
+                const pad = n => String(n).padStart(2, "0");
+                for (let h = 0; h < 24; h++) hs.add(new Option(pad(h), pad(h)));
+                for (let m = 0; m < 60; m += 5) ms.add(new Option(pad(m), pad(m)));
+                const lab = document.querySelector('label[for="' + inp.id + '"]');
+                const name = lab ? lab.textContent : "Heure";
+                hs.setAttribute("aria-label", name + " : heures");
+                ms.setAttribute("aria-label", name + " : minutes");
+                const sep = document.createElement("span");
+                sep.textContent = "h";
+                wrap.append(hs, sep, ms);
+                inp.parentNode.insertBefore(wrap, inp.nextSibling);
+                let cur = inp.value || "20:00";
+                function show(v) {
+                    const m = /^(\d{1,2}):(\d{2})/.exec(v || "");
+                    if (!m) return;
+                    cur = pad(+m[1]) + ":" + m[2];
+                    hs.value = pad(+m[1]);
+                    if (![...ms.options].some(o => o.value === m[2])) {
+                        ms.add(new Option(m[2], m[2]));
+                        [...ms.options].sort((a, b) => a.value - b.value).forEach(o => ms.add(o));
+                    }
+                    ms.value = m[2];
+                }
+                const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+                Object.defineProperty(inp, "value", {
+                    get() { return cur; },
+                    set(v) { show(v); proto.set.call(inp, cur); }
+                });
+                const upd = () => { cur = hs.value + ":" + ms.value; proto.set.call(inp, cur); };
+                hs.addEventListener("change", upd);
+                ms.addEventListener("change", upd);
+                show(cur);
+            });
+        })();
         // ==========================================================
         // CONFIGURATION
         // ==========================================================
@@ -1856,6 +1900,8 @@
                 storePlanningCache_();
                 showToast(motifChange ? "Événement modifié, les réponses sont remises à zéro." : "Événement modifié !");
                 openNotifyModal(msgModification_(prop, avant.motif, motifChange));
+                // Resynchronise avec la feuille (au cas où elle diffère de l'affichage).
+                setTimeout(() => { loadPlanning(); }, 1500);
             } catch (err) {
                 prop.debut = avant.debut;
                 prop.fin = avant.fin;

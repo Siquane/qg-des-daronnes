@@ -450,6 +450,7 @@
         .round-btn.part-inconnu { background: var(--border); border-radius: 50%; }
         .round-btn.part-oui { background: var(--pastille-color, var(--border)); border-radius: 50%; }
         .round-btn.part-non { background: transparent; border-radius: 50%; }
+        .round-btn.part-enfants { background: transparent; border-radius: 50%; }
         .participation-row { margin-top: 6px; }
 
         /* Mini-pastilles utilisées dans la vue calendrier (taille réduite pour
@@ -1727,8 +1728,21 @@
             return prop.sondage ? propositionsData.filter(p => p.sondage === prop.sondage) : [prop];
         }
 
+        // Réponse "je viens" : "Oui" (sans enfant) ou "OuiEnfants" (avec enfants).
+        function isOuiVal_(v) {
+            v = (v || "").trim();
+            return v === "Oui" || v === "OuiEnfants";
+        }
+
         function ouiCount_(prop) {
-            return PEOPLE.filter(p => (prop[p.key] || "").trim() === "Oui").length;
+            return PEOPLE.filter(p => isOuiVal_(prop[p.key])).length;
+        }
+
+        // « Anaïs (avec enfants), Sonia » : celles qui viennent, avec la mention enfants.
+        function partantsText_(prop) {
+            return PEOPLE.filter(p => isOuiVal_(prop[p.key]))
+                .map(p => p.display + ((prop[p.key] || "").trim() === "OuiEnfants" ? " (avec enfants)" : ""))
+                .join(", ");
         }
 
         // Une personne a répondu quand toutes les options du groupe (1 seule hors sondage) sont remplies.
@@ -2209,7 +2223,7 @@
             },
             {
                 title: "✅ Répondre à une proposition (\"Qui vient ?\")",
-                html: `Sous chaque événement proposé, une rangée de pastilles <strong>"Qui vient ?"</strong> apparaît. C'est complètement séparé de tes dispos générales — être dispo ne veut pas dire vouloir faire l'activité proposée (une pastille dispo n'indique pas si tu as envie d'aller à la piscine !). Clique ta pastille pour répondre : rond gris = pas répondu, rond coloré = tu viens, croix colorée = tu ne viens pas.
+                html: `Sous chaque événement proposé, une rangée de pastilles <strong>"Qui vient ?"</strong> apparaît. C'est complètement séparé de tes dispos générales — être dispo ne veut pas dire vouloir faire l'activité proposée (une pastille dispo n'indique pas si tu as envie d'aller à la piscine !). Clique ta pastille pour répondre, chaque clic passe à la suivante : rond gris = pas répondu, <strong>rond coloré = tu viens (sans enfant)</strong>, <strong>triangle coloré = tu viens avec tes enfants</strong>, croix colorée = tu ne viens pas. Le triangle apparaît aussi dans les messages WhatsApp, les e-mails et l'invitation d'agenda (« Anaïs (avec enfants) »).
                     Dès que les <strong>4 ont répondu</strong> et qu'au moins <strong>2 ont dit "je viens"</strong>, l'événement est <strong>confirmé automatiquement</strong> (le bandeau devient coloré, un segment par personne partante) et une <strong>invitation arrive dans l'agenda de celles qui viennent</strong>. Sinon, un message propose d'annuler la proposition.`
             },
             {
@@ -2546,7 +2560,7 @@
             // 🙋 La plus partante (nombre de « Oui » aux événements proposés)
             const oui = PEOPLE.map(p => ({
                 person: p,
-                n: propositionsData.filter(x => (x[p.key] || "").trim() === "Oui").length
+                n: propositionsData.filter(x => isOuiVal_(x[p.key])).length
             })).sort((a, b) => b.n - a.n);
             if (oui[0] && oui[0].n > 0) {
                 const top = oui[0].n;
@@ -2711,7 +2725,7 @@
         }
 
         function msgConfirmation_(prop) {
-            const partants = PEOPLE.filter(p => (prop[p.key] || "") === "Oui").map(p => p.display).join(", ");
+            const partants = partantsText_(prop);
             return `🎉 C'est confirmé : « ${prop.motif} » le ${propWhen_(prop)} ! Avec : ${partants}. L'invitation arrive dans votre agenda.`;
         }
 
@@ -3466,17 +3480,22 @@
         // Réponse "je viens / je viens pas" à un événement PROPOSÉ — totalement
         // indépendante des dispos générales (quelqu'un peut être dispo mais ne pas
         // vouloir faire l'activité proposée, ou inversement se libérer pour l'occasion).
+        // 'inconnu' = rond gris | 'oui' = rond coloré (sans enfant) | 'enfants' = triangle coloré
+        // (avec enfants) | 'non' = croix colorée
         function participationState(rawState) {
             rawState = (rawState || "").trim();
             if (rawState === "Oui") return "oui";
+            if (rawState === "OuiEnfants") return "enfants";
             if (rawState === "Non") return "non";
             return "inconnu";
         }
 
+        // Un clic fait tourner : (vide) → Oui → Oui avec enfants → Non → Oui…
         function nextParticipation(current) {
             current = (current || "").trim();
             if (current === "") return "Oui";
-            if (current === "Oui") return "Non";
+            if (current === "Oui") return "OuiEnfants";
+            if (current === "OuiEnfants") return "Non";
             return "Oui";
         }
 
@@ -3490,9 +3509,12 @@
                         const isMine = p.key === myKey;
                         const state = participationState(prop[p.key]);
                         const stateLabel = state === "inconnu" ? "n'a pas encore répondu à la proposition"
-                            : state === "oui" ? "vient"
+                            : state === "oui" ? "vient, sans enfant"
+                            : state === "enfants" ? "vient avec ses enfants"
                             : "ne vient pas";
-                        const content = state === "non" ? pastilleCrossSVG(p.color, 34) : "";
+                        const content = state === "non" ? pastilleCrossSVG(p.color, 34)
+                            : state === "enfants" ? pastilleTriangleSVG(p.color, 34)
+                            : "";
                         return `
                         <div class="participant-badge">
                             <span>${p.short}</span>
@@ -3527,7 +3549,7 @@
 
             prop[personKey] = newVal;
             // Sondage : "Oui" à une option = "Non" aux autres (un seul choix possible).
-            if (prop.sondage && newVal === "Oui") {
+            if (prop.sondage && isOuiVal_(newVal)) {
                 group.forEach(g => { if (g !== prop) g[personKey] = "Non"; });
             }
             renderApp();
@@ -3619,7 +3641,7 @@
             `;
 
             if (status === "confirmed") {
-                const partants = PEOPLE.filter(p => (prop[p.key] || "") === "Oui");
+                const partants = PEOPLE.filter(p => isOuiVal_(prop[p.key]));
                 const segments = partants.map(p => `<span style="flex:1; background:${p.color};"></span>`).join("");
                 return `
                     <div class="proposal-bar-wrap is-confirmed">
